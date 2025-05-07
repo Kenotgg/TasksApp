@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TasksApp.Server.Services.Interfaces;
 
 namespace TasksApp.Server.Controllers
 {
@@ -7,10 +8,18 @@ namespace TasksApp.Server.Controllers
     [ApiController]
     public class TasksController : ControllerBase
     {
-        [HttpGet("getTask")]
-        public IActionResult Get() 
+        ITasksService _tasksService;
+        public TasksController(ITasksService tasksService) 
         {
-            return Ok();
+            _tasksService = tasksService;
+        }
+
+
+        [HttpGet("getTasks")]
+        public async Task<IActionResult> GetAll() 
+        {
+            var tasks = await _tasksService.GetAll();
+            return Ok(tasks);
         }
     }
 }
