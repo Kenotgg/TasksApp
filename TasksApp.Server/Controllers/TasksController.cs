@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TasksApp.Server.Models;
 using TasksApp.Server.Services.Interfaces;
 
 namespace TasksApp.Server.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class TasksController : ControllerBase
     {
         ITasksService _tasksService;
@@ -20,6 +21,13 @@ namespace TasksApp.Server.Controllers
         {
             var tasks = await _tasksService.GetAll();
             return Ok(tasks);
+        }
+
+        [HttpPost("addTask")]
+        public async Task<IActionResult> Add(TaskModel taskModel) 
+        {
+            var model = await _tasksService.Add(taskModel);
+            return Ok(model);
         }
     }
 }

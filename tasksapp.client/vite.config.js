@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import child_process from 'child_process';
 import { env } from 'process';
-
+import tailwindcss from '@tailwindcss/vite';
 const baseFolder =
     env.APPDATA !== undefined && env.APPDATA !== ''
         ? `${env.APPDATA}/ASP.NET/https`
@@ -41,6 +41,7 @@ const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_H
 export default defineConfig({
     plugins: [
         plugin(),
+        tailwindcss(),
     ],
     resolve: {
         alias: {

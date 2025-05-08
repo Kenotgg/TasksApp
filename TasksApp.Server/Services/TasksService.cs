@@ -17,5 +17,12 @@ namespace TasksApp.Server.Services
             var tasks = await _dataContext.taskModels.ToListAsync();
             return _dataContext.taskModels.ToList();
         }
+
+        public async Task<TaskModel> Add(TaskModel taskModel) 
+        {
+            await _dataContext.taskModels.AddAsync(taskModel);
+            await _dataContext.SaveChangesAsync();
+            return taskModel;
+        }
     }
 }
