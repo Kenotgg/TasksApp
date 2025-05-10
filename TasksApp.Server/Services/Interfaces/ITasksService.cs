@@ -6,5 +6,6 @@ namespace TasksApp.Server.Services.Interfaces
     {
         Task<List<TaskModel>> GetAll();
         Task<TaskModel> Add(TaskModel taskModel);
+        Task<TaskModel> ChangeCompletionState(int id, bool isCompleted);
     }
 }

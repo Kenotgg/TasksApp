@@ -29,5 +29,14 @@ namespace TasksApp.Server.Controllers
             var model = await _tasksService.Add(taskModel);
             return Ok(model);
         }
+
+        [HttpPut("EditTaskCompletion")]
+        public async Task<IActionResult> ChangeCompletionState(int id, bool isCompleted) 
+        {
+            var changedTask = await _tasksService.ChangeCompletionState(id, isCompleted);  
+            
+            return Ok(changedTask);
+        }
+
     }
 }

@@ -24,5 +24,21 @@ namespace TasksApp.Server.Services
             await _dataContext.SaveChangesAsync();
             return taskModel;
         }
+
+
+        public async Task<TaskModel> ChangeCompletionState(int id, bool isCompleted) 
+        {
+            var taskToChange = await _dataContext.taskModels.FirstOrDefaultAsync(i => i.Id == id);
+            if (taskToChange != null) 
+            {
+                taskToChange.IsCompleted = isCompleted;
+                await _dataContext.SaveChangesAsync();
+                return taskToChange;
+            }
+            else 
+            {
+                return null;
+            }
+        }
     }
 }
