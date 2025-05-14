@@ -19,6 +19,9 @@ namespace TasksApp.Server.Models
         [Column("duedate")]
         public DateTime DueDate { get; set; }
 
+        [Column("dateTimeOfExecution")]
+        public DateTime DateTimeOfExecution { get; set; }
+
         [MaxLength(50)] // Ограничиваем длину строки
         [Column("priority")]
         public string Priority { get; set; }

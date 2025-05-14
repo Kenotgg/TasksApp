@@ -7,18 +7,18 @@ namespace TasksApp.Server.Services
     public class TasksService : ITasksService
     {
         private AppDataContext _dataContext;
-        public TasksService(AppDataContext dataContext) 
+        public TasksService(AppDataContext dataContext)
         {
-            _dataContext = dataContext; 
+            _dataContext = dataContext;
         }
 
-        public async Task<List<TaskModel>> GetAll() 
+        public async Task<List<TaskModel>> GetAll()
         {
             var tasks = await _dataContext.taskModels.ToListAsync();
             return _dataContext.taskModels.ToList();
         }
 
-        public async Task<TaskModel> Add(TaskModel taskModel) 
+        public async Task<TaskModel> Add(TaskModel taskModel)
         {
             await _dataContext.taskModels.AddAsync(taskModel);
             await _dataContext.SaveChangesAsync();
@@ -26,16 +26,62 @@ namespace TasksApp.Server.Services
         }
 
 
-        public async Task<TaskModel> ChangeCompletionState(int id, bool isCompleted) 
+        public async Task<TaskModel> ChangeCompletionState(int id, bool isCompleted)
         {
             var taskToChange = await _dataContext.taskModels.FirstOrDefaultAsync(i => i.Id == id);
-            if (taskToChange != null) 
+            if (taskToChange != null)
             {
                 taskToChange.IsCompleted = isCompleted;
                 await _dataContext.SaveChangesAsync();
                 return taskToChange;
             }
-            else 
+            else
+            {
+                return null;
+            }
+        }
+
+        public async Task<string> RemoveTask(int id)
+        {
+            var taskToRemove = await _dataContext.taskModels.FirstOrDefaultAsync(t => t.Id == id);
+            if (taskToRemove == null)
+            {
+                return "Task with the entered id was not found";
+            }
+            _dataContext.taskModels.Remove(taskToRemove);
+            await _dataContext.SaveChangesAsync();
+            return "Task was removed";
+        }
+
+        public async Task<TaskModel> EditTask(int id, string title, string description, DateTime dueDate, string priority, string category, bool isCompleted, DateTime dateTimeOfExecution)
+        {
+            var taskToEdit = await _dataContext.taskModels.FirstOrDefaultAsync(t => t.Id == id);
+            if(taskToEdit != null) 
+            {
+                taskToEdit.Title = title;
+                taskToEdit.Description = description;
+                taskToEdit.DueDate = dueDate;
+                taskToEdit.Priority = priority;
+                taskToEdit.Category = category;
+                taskToEdit.IsCompleted = isCompleted;
+                taskToEdit.DateTimeOfExecution = dateTimeOfExecution;
+                await _dataContext.SaveChangesAsync();
+                return taskToEdit;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public async Task<TaskModel> GetTask(int id)
+        {
+            var taskToGet = await _dataContext.taskModels.FirstOrDefaultAsync(t => t.Id == id);
+            if (taskToGet != null) 
+            {
+                return taskToGet;
+            }
+            else
             {
                 return null;
             }

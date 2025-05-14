@@ -18,7 +18,6 @@ export default function App() {
             console.log(tasks);
         }
 
-
     const updateTasksListWithSort = async () => {
         let tasks = await fetchTasks();
         tasks = sortTasks(tasks,sortOrder);
