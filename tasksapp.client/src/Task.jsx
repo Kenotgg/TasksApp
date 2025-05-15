@@ -1,4 +1,4 @@
-import { useToast, Card,AlertDialog, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl,FormLabel,Input,ModalFooter,AlertDialogOverlay,AlertDialogContent,AlertDialogHeader,AlertDialogBody,AlertDialogFooter,Button, CardFooter, Spacer, Stack, CardHeader, Divider, CardBody, Text, AbsoluteCenter, Box, Checkbox, textDecoration, IconButton, Flex } from '@chakra-ui/react';
+import { useToast, Card,Select, AlertDialog, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Input, ModalFooter, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button, CardFooter, Spacer, Stack, CardHeader, Divider, CardBody, Text, AbsoluteCenter, Box, Checkbox, textDecoration, IconButton, Flex } from '@chakra-ui/react';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
@@ -19,14 +19,14 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
         category: category,
         isCompleted: isCompleted,
         dateTimeOfExecution: dateTimeOfExecution
-         
+
     })
-     
+
 
     let formattedDate;
     try {
         const date = new Date(dateOfFinish);
-        formattedDate = format(date, 'День: dd, Месяц: MM, Год: yyyy. HH:mm.');
+        formattedDate = format(date, 'dd день MM месяц yyyy год в HH часов и mm минут.');
     } catch (error) {
         console.error("Error formatting date: ", error);
         formattedDate = "Invalid Date";
@@ -35,7 +35,7 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
     const toast = useToast();
 
 
-     const handleOpenEditModal = () => {
+    const handleOpenEditModal = () => {
         setIsEditModalOpen(true);
     };
 
@@ -43,7 +43,7 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
         setIsEditModalOpen(false);
     };
 
-     const handleInputChange = (e) => {
+    const handleInputChange = (e) => {
         setEditTaskData({
             ...editTaskData,
             [e.target.name]: e.target.value,
@@ -52,7 +52,7 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
 
     const handleUpdateTask = async () => {
         try {
-            const response = await fetch(`https://localhost:7148/api/Tasks/${taskID}`, { // Замените URL
+            const response = await fetch(`https://localhost:7148/api/Tasks/editTask?id=${editTaskData.id}&title=${editTaskData.title}&category=${editTaskData.category}&priority=${editTaskData.priority}&description=${editTaskData.description}`, { // Замените URL
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -158,43 +158,41 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
     return (
         <Card style={cardStyle} marginTop={5}>
             <CardHeader>
-                <Text fontWeight={"bold"} fontSize={"lg"} >{title + ':'}</Text>
+                <Text fontWeight={"bold"} fontSize={24} >{title + ':'}</Text>
             </CardHeader>
             <Box position='relative' padding='1'>
                 <Divider />
-                <AbsoluteCenter bg={cardStyle} px='2'>
-                    <Text style={cardStyle}>Описание</Text>
-                </AbsoluteCenter>
             </Box>
             <CardBody>
-                <Text>{description}</Text>
-                <Text>Приоритет: {priority + '.'}</Text>
-                <Text>{'Дедлайн: ' + formattedDate}</Text>
-                <Text>{'Время выполнения: ' + formattedDate}</Text>
-                <Stack direction="row">
-                    <Text>Состояние выполнения:</Text>
-                    <Checkbox isChecked={isCompleted} onChange={handleCheckBoxChange}></Checkbox>
+                <Text fontSize={21}>{description}</Text>
+                <Text color={'gray.600'} fontSize={17}>{'Выполнить до: ' + formattedDate}</Text>
+                <Text color={'gray.600'} fontSize={17}>{'Готово в: ' + formattedDate}</Text>
+                <Text color={'gray.600'} fontSize={17}>Приоритет: {priority + '.'}</Text>
+                <Stack marginTop={3}>
+                    <Flex>
+                        <Checkbox size={'lg'} isChecked={isCompleted} onChange={handleCheckBoxChange}></Checkbox>
+                        <Spacer />
+                        <IconButton marginRight={1} aria-label="Редактировать задачу"
+                            onClick={handleOpenEditModal}
+                            icon={<EditIcon />}
+                            size="sm">
+                        </IconButton>
+                        <IconButton aria-label="Удалить задачу"
+                            onClick={() => handleOpenDeleteDialog(taskID)}
+                            icon={<DeleteIcon />}
+                            size="sm">
+                        </IconButton>
+                    </Flex>
                 </Stack>
-                <Flex>
-                    <Spacer/>
-                    <IconButton aria-label="Редактировать задачу"
-                        onClick={handleOpenEditModal} 
-                        icon={<EditIcon />}
-                        size="sm">
-                    </IconButton>
-                    <IconButton aria-label="Удалить задачу"
-                        onClick={() => handleOpenDeleteDialog(taskID)}
-                        icon={<DeleteIcon />}
-                        size="sm">
-                    </IconButton>
-                </Flex>
+
+
 
             </CardBody>
             <AlertDialog
                 isOpen={isDeleteDialogOpen}
                 leastDestructiveRef={cancelRef}
                 onClose={handleCloseDeleteDialog}
-                >
+            >
                 <AlertDialogOverlay>
                     <AlertDialogContent>
                         <AlertDialogHeader fontSize="lg" fontWeight="bold">
@@ -216,7 +214,7 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
                     </AlertDialogContent>
                 </AlertDialogOverlay>
             </AlertDialog>
-             <Modal isOpen={isEditModalOpen} onClose={handleCloseEditModal}>
+            <Modal isOpen={isEditModalOpen} onClose={handleCloseEditModal}>
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader>Редактировать задачу</ModalHeader>
@@ -229,13 +227,25 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
                                 onChange={handleInputChange}
                             />
                         </FormControl>
-                        <FormControl mt={4}>
+                        <FormControl>
                             <FormLabel>Описание</FormLabel>
                             <Input
-                                name="description"
+                                name="title"
                                 value={editTaskData.description}
                                 onChange={handleInputChange}
                             />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>Приоритет</FormLabel>
+                            <Select fontSize={21} marginBottom={"7px"} value={editTaskData.priority}> 
+                                <option fontSize={21} value={"Низкий"}>Низкий</option>
+                                <option fontSize={21} value={"Средний"}>Средний</option>
+                                <option fontSize={21} value={"Высокий"}>Высокий</option>
+                            </Select>
+                        </FormControl>
+                        <FormControl mt={4}>
+                            <FormLabel>Категория</FormLabel>
+                           
                         </FormControl>
                         <FormControl mt={4}>
                             <FormLabel>Дата выполнения</FormLabel>
@@ -245,7 +255,14 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
                                 onChange={handleInputChange}
                             />
                         </FormControl>
-                        {/* ... другие поля ... */}
+                        <FormControl mt={4}>
+                            <FormLabel>Крайний срок</FormLabel>
+                            <Input
+                                name="dateTimeOfExecution"
+                                value={editTaskData.dateTimeOfExecution}
+                                onChange={handleInputChange}
+                            />
+                        </FormControl>
                     </ModalBody>
 
                     <ModalFooter>
@@ -256,8 +273,8 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
                     </ModalFooter>
                 </ModalContent>
             </Modal>
-            
+
         </Card>
-        
+
     )
 };
