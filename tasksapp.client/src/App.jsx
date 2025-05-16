@@ -1,3 +1,4 @@
+// Импорт различных библиотек для работы
 import { useEffect, useState } from 'react';
 import CreateTaskForm from './CreateTaskForm';
 import Task from './Task';
@@ -6,64 +7,45 @@ import './App.css';
 import { fetchTasks } from './services/tasks';
 import { isToday, isTomorrow, isThisWeek, format, isYesterday, addWeeks, startOfWeek } from 'date-fns';
 export default function App() {
+    // Переменные для хранения состояний
     const [tasks, setTasks] = useState([]);
     const [sortOrder, setSortOrder] = useState('asc');
     const [sortType, setSortType] = useState('completion');
-    const [groupType, setGroupType] = useState('Сегодня');
+    const [groupType, setGroupType] = useState('default');
     const [sortedTasks, setSortedTasks] = useState([]);
     const [groupedTasks, setGroupedTasks] = useState([]);
     const priorityOrder = ["Низкий", "Средний", "Высокий"];
 
-
+    // Функция которая вызыается в случае изменения sortType или groupType
     useEffect(() => {
-       updateTasksList();
+        updateTasksList();
     }, [sortType, groupType]);
 
+    // Функция для подгрузки данных с базы данных
     const fetchData = async () => {
         let tasks = await fetchTasks();
         setTasks(tasks);
         console.log(tasks);
     }
-
+    // Функция, которая группирует, а после сортирует полученные с базы задания
     const updateTasksList = async () => {
         let fetchedTasks = await fetchTasks();
         let filteredTasks = filterTasksByDate(fetchedTasks, groupType);
         let sortedTasks = sortTasksBySortType(filteredTasks, sortType);
         setGroupedTasks(sortedTasks);
     };
-
-    const updateTasksListWithSort = async () => {
-        console.log(sortType);
-        let fetchedTasks = await fetchTasks();
-        let sortedTasks = sortTasksBySortType(fetchedTasks, sortType);
-        setSortedTasks(sortedTasks);
-        setTasks(sortedTasks);
-        console.log("обновление списка задач");
-    }
-
-    const updateTasksListWithGroup = async () => {
-        console.log(sortType);
-        let fetchedTasks = await fetchTasks();
-        let groupedTasks = filterTasksByDate(fetchedTasks, groupType);
-        setGroupedTasks(groupedTasks);
-        setTasks(groupedTasks);
-        console.log("обновление списка группированных задач");
-    }
-
+    // Функции для обработки изменения типа сортировки или группировки
     const onSwitchSortOrder = (e) => {
-        console.log(e.target.value);
         setSortType(e.target.value);
     }
 
     const onSwitchGroupOrder = (e) => {
-        console.log(e.target.value);
         setGroupType(e.target.value);
     }
 
+    // Функция, которая сортирует задачи в соответствии с типом на входе
     const sortTasksBySortType = (tasks, sortType) => {
-        console.log(sortType);
         let sortedTasks = [...tasks];
-
         switch (sortType) {
             case 'priority':
                 sortedTasks.sort((a, b) => {
@@ -77,7 +59,6 @@ export default function App() {
                 sortedTasks.sort((a, b) => {
                     const dateA = a.dateTimeOfExecution ? new Date(a.dateTimeOfExecution) : new Date(0); // Если нет, ставим 0 (1970)
                     const dateB = b.dateTimeOfExecution ? new Date(b.dateTimeOfExecution) : new Date(0);
-                    console.log(a.dateTimeOfExecution);
                     // Проверка на Invalid Date
                     if (isNaN(dateA.getTime())) {
                         console.warn("Некорректная дата:", a.dateTimeOfExecution);
@@ -87,7 +68,6 @@ export default function App() {
                         console.warn("Некорректная дата:", b.dateTimeOfExecution);
                         return -1; // Считаем некорректную дату больше, чтобы она была в конце списка
                     }
-
                     return dateB.getTime() - dateA.getTime(); // Сортировка по убыванию (от новых к старым)
                 });
                 break;
@@ -97,7 +77,7 @@ export default function App() {
         return sortedTasks;
     }
 
-
+    // Функция для того, чтобы отфильтровать задачи по категориям “Сегодня”, “Завтра”, “На этой неделе”, “Следующая неделя”
     const filterTasksByDate = (tasks, filterType) => {
         if (filterType === 'default') {
             return tasks; //  Возвращаем все задачи без фильтра
@@ -124,12 +104,12 @@ export default function App() {
         });
         return filtered;
     };
-
+    // Вспомогательная функция для получения следующей недели
     const getNextWeekStartDate = (date = new Date()) => {
         const nextWeekStart = addWeeks(startOfWeek(date, { weekStartsOn: 1 }), 1); // weekStartsOn: 1 - понедельник
         return nextWeekStart;
     };
-
+    // Функция для проверки можно ли поставить задачу на следующую неделю в фильтрации
     const isTaskInNextWeek = (taskDate) => {
         const nextWeekStart = getNextWeekStartDate();
         const nextWeekEnd = addWeeks(nextWeekStart, 1); // Add one week to get the end date
@@ -137,22 +117,25 @@ export default function App() {
     };
 
     return <div>
+        {/* Плашка главного меню сверху с логотипом */}
         <Box display="flex" alignItems="center" justifyContent="center" background={'yellow.400'} height={100}>
             <Text fontSize={42} fontWeight={'bold'} color={'white'}>MyNotes</Text>
         </Box>
-
+        {/* Главная секция, которая содержит добавление и вывод задач */}
         <section className='p8 flex flex-row justify-center items-start gap-12'>
+            {/* Форма для добавления задачи */}
             <div>
-                <CreateTaskForm onAddTask={updateTasksListWithSort}></CreateTaskForm>
+                <CreateTaskForm onAddTask={updateTasksList}></CreateTaskForm>
             </div>
+            {/* Список с остортированными и сгруппированными задачами */}
             <Box p={6} border={"2px solid"} marginTop={5} borderColor={'gray.200'} borderRadius={"md"} boxShadow={"md"}>
                 <Text fontWeight={"bold"} className='font-weight-bold' fontSize={28}>Задачи:</Text>
-
-                <select value={sortType} onChange={onSwitchSortOrder}>
+                {/* Выбор сортировки */}
+                <select style={{ marginRight: "20px" }} value={sortType} onChange={onSwitchSortOrder}>
                     <option value="completion">По дате выполнения</option>
                     <option value="priority">По приоритету</option>
                 </select>
-
+                {/* Выбор группировки */}
                 <select value={groupType} onChange={onSwitchGroupOrder}>
                     <option value="default">По умолчанию</option>
                     <option value="Сегодня">Сегодня</option>
@@ -160,7 +143,7 @@ export default function App() {
                     <option value="На этой неделе">На этой неделе</option>
                     <option value="На следующей неделе">Следующая неделя</option>
                 </select>
-
+                {/* Задачи в виде карточек */}
                 <ul>
                     {groupedTasks.map((n) => (
                         <li key={n.id}>
@@ -171,7 +154,8 @@ export default function App() {
                                     priority={n.priority}
                                     dateTimeOfExecution={n.dateTimeOfExecution}
                                     isCompleted={n.isCompleted}
-                                    updateTasksList={updateTasksListWithSort}
+                                    category={n.category}
+                                    updateTasksList={updateTasksList}
                                     taskID={n.id} />
                             </ul>
                         </li>

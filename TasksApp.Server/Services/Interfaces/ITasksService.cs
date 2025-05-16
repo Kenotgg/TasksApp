@@ -2,6 +2,7 @@
 
 namespace TasksApp.Server.Services.Interfaces
 {
+    //Интерфейс, используется для доступа к сервису из контроллера HTTP запросов
     public interface ITasksService
     {
         Task<List<TaskModel>> GetAll();

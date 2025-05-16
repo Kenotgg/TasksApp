@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 namespace TasksApp.Server.Models
 {
+    //Модель для работы с данными из таблицы в БД.
     public class TaskModel
     {
         [Key]
@@ -12,6 +13,7 @@ namespace TasksApp.Server.Models
         [MaxLength(255)] // Ограничиваем длину строки
         [Column("title")]
         public string Title { get; set; }
+
         [Column("description")]
         public string Description { get; set; }
 
@@ -29,6 +31,7 @@ namespace TasksApp.Server.Models
         [MaxLength(255)] // Ограничиваем длину строки
         [Column("category")]
         public string Category { get; set; }
+        
         [Column("iscompleted")]
         public bool IsCompleted { get; set; }
     }

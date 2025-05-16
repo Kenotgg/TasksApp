@@ -1,14 +1,16 @@
+// Импорт различных библиотек для работы
 import { Input, Textarea, Button, Center, Text, Select, useToast, Box } from '@chakra-ui/react';
 import { useState } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ru from 'date-fns/locale/ru';
-import { registerLocale, setDefaultLocale } from 'react-datepicker'; // Correct Import
+import { registerLocale, setDefaultLocale } from 'react-datepicker';
 
+// Русификация дат и календаря
 registerLocale('ru', ru);
-setDefaultLocale('ru'); // Устанавливаем русскую локаль по умолчанию
+setDefaultLocale('ru'); 
 export default function CreateTaskForm({ onAddTask }) {
-    //Состояния полей формы.
+    // Переменные для хранения состояний
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState('Средний');
@@ -16,8 +18,9 @@ export default function CreateTaskForm({ onAddTask }) {
     //Состояния ошибок.
     const [titleError, setTitleError] = useState('');
     const [endDateError, setEndDateError] = useState('');
+    let isValid = true;
     const toast = useToast();
-
+    // Состояние для хранения дедлайна
     const [endDate, setEndDate] = useState(() => {
         const now = new Date();
         const currentDay = now.getDay();
@@ -25,8 +28,9 @@ export default function CreateTaskForm({ onAddTask }) {
         now.setSeconds(0, 0);
         return now;
     });
-    let isValid = true;
-    const handleClick = async (event) => {
+
+    // Обработчик создания задачи, отправляет запрос на сервер
+    const handleCreateTask = async (event) => {
         event.preventDefault();
         validateForm();
         if (!isValid) {
@@ -48,7 +52,6 @@ export default function CreateTaskForm({ onAddTask }) {
                 },
                 body: JSON.stringify(dataToAdd),
             });
-            console.log(response.status);
             if (response.ok) {
                 console.log('Задача успешно добавлена!');
                 onAddTask();
@@ -62,6 +65,8 @@ export default function CreateTaskForm({ onAddTask }) {
             console.error(error);
         }
     }
+
+    // Обработчики полей для заполнения формы
     const handleTitleChange = (event) => {
         setTitle(event.target.value);
         setTitleError(event.target.value ? '' : 'Название задачи обязательно для заполнения.');
@@ -81,6 +86,8 @@ export default function CreateTaskForm({ onAddTask }) {
         setEndDateError(date ? '' : 'Дата обязательна для заполнения.')
         toast({ title: "Изменяем дату" });
     }
+    
+    // Функция для валидации полей формы
     const validateForm = () => {
         isValid = true;
 
@@ -95,7 +102,9 @@ export default function CreateTaskForm({ onAddTask }) {
             return;
         }
     }
+
     return <div className='p8 flex flex-row justify-center items-start gap-12'>
+        {/* Форма */}
         <form>
             <Box p={6} border={"2px solid"} marginTop={5} borderColor={'gray.200'} borderRadius={"md"} boxShadow={"md"}>
                 <Text fontWeight={'bold'} className='font-weight-bold' fontSize={28} marginBottom={"7px"}>Добавить задачу:</Text>
@@ -117,8 +126,9 @@ export default function CreateTaskForm({ onAddTask }) {
                     </DatePicker>
                 </Box>
                 <Text fontWeight={'bold'} className='font-weight-bold text-l'></Text>
+                {/* Кнопка для отправки результата */}
                 <Box display={'flex'} alignItems={'center'} justifyContent={'center'}>
-                    <Button onClick={handleClick} fontSize={21} width={150} color={'white'} backgroundColor={'yellow.400'}>Создать</Button>
+                    <Button onClick={handleCreateTask} fontSize={21} width={150} color={'white'} backgroundColor={'yellow.400'}>Создать</Button>
                 </Box>
             </Box>
         </form>
