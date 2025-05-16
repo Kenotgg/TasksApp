@@ -3,37 +3,55 @@ import { format } from 'date-fns';
 import { useState } from 'react';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import React, { useRef } from 'react';
-
-export default function Task({ title, description, dateOfFinish, priority, isCompleted: initialIsCompleted, updateTasksList, category, dateTimeOfExecution, taskID }) {
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import ru from 'date-fns/locale/ru';
+import { registerLocale, setDefaultLocale } from 'react-datepicker'; // Correct Import
+export default function Task({ title, description, priority, dueDate, isCompleted: initialIsCompleted, updateTasksList, category, dateTimeOfExecution, taskID }) {
     const [isCompleted, setIsCompleted] = useState(initialIsCompleted);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(null);
     const [taskIdToDelete, setTaskIdToDelete] = useState(null); // Состояние для хранения ID удаляемой задачи
     const cancelRef = React.useRef();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+      const [endDate, setEndDate] = useState(() => {
+        const now = new Date();
+        const currentDay = now.getDay();
+        now.setDate(currentDay + 7);
+        now.setSeconds(0, 0);
+        return now;
+    });
+     const [endDateError, setEndDateError] = useState('');
+     const [titleError, setTitleError] = useState('');
     const [editTaskData, setEditTaskData] = useState({
         id: taskID,
         title: title,
         description: description,
-        dateOfFinish: dateOfFinish,
         priority: priority,
         category: category,
         isCompleted: isCompleted,
+        dueDate: dueDate,
         dateTimeOfExecution: dateTimeOfExecution
-
     })
-
-
-    let formattedDate;
-    try {
-        const date = new Date(dateOfFinish);
-        formattedDate = format(date, 'dd день MM месяц yyyy год в HH часов и mm минут.');
-    } catch (error) {
-        console.error("Error formatting date: ", error);
-        formattedDate = "Invalid Date";
-    }
-
     const toast = useToast();
 
+     const handleDataChange = (date) => {
+        setEndDate(date);
+        setEndDateError(date ? '' : 'Дата обязательна для заполнения.')
+        toast({ title: "Изменяем дату" });
+    }
+    const formatDate = (inputDate) => {
+        if (!inputDate) {
+        return "Дата не указана"; // Или другое сообщение по умолчанию
+    }
+        try {
+            const date = new Date(inputDate);
+            const formattedDate = format(date, 'dd день MM месяц yyyy год в HH часов и mm минут.')
+            return formattedDate;
+        } catch (error) {
+            console.error("Error formatting date: ", error);
+            return "Invalid Date";
+        }
+    }
 
     const handleOpenEditModal = () => {
         setIsEditModalOpen(true);
@@ -50,9 +68,9 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
         });
     };
 
-    const handleUpdateTask = async () => {
+    const handleEditTask = async () => {
         try {
-            const response = await fetch(`https://localhost:7148/api/Tasks/editTask?id=${editTaskData.id}&title=${editTaskData.title}&category=${editTaskData.category}&priority=${editTaskData.priority}&description=${editTaskData.description}`, { // Замените URL
+            const response = await fetch(`https://localhost:7148/api/Tasks/editTask?id=${editTaskData.id}&title=${editTaskData.title}&category=${editTaskData.category}&priority=${editTaskData.priority}&description=${editTaskData.description}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -165,8 +183,8 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
             </Box>
             <CardBody>
                 <Text fontSize={21}>{description}</Text>
-                <Text color={'gray.600'} fontSize={17}>{'Выполнить до: ' + formattedDate}</Text>
-                <Text color={'gray.600'} fontSize={17}>{'Готово в: ' + formattedDate}</Text>
+                <Text color={'gray.600'} fontSize={17}>{'Выполнить до: ' + formatDate(dueDate)}</Text>
+                <Text color={'gray.600'} fontSize={17}>{'Готово в: ' + formatDate(dateTimeOfExecution)}</Text>
                 <Text color={'gray.600'} fontSize={17}>Приоритет: {priority + '.'}</Text>
                 <Stack marginTop={3}>
                     <Flex>
@@ -214,65 +232,77 @@ export default function Task({ title, description, dateOfFinish, priority, isCom
                     </AlertDialogContent>
                 </AlertDialogOverlay>
             </AlertDialog>
-            <Modal isOpen={isEditModalOpen} onClose={handleCloseEditModal}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Редактировать задачу</ModalHeader>
-                    <ModalBody>
-                        <FormControl>
-                            <FormLabel>Заголовок</FormLabel>
-                            <Input
-                                name="title"
-                                value={editTaskData.title}
-                                onChange={handleInputChange}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Описание</FormLabel>
-                            <Input
-                                name="title"
-                                value={editTaskData.description}
-                                onChange={handleInputChange}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Приоритет</FormLabel>
-                            <Select fontSize={21} marginBottom={"7px"} value={editTaskData.priority}> 
-                                <option fontSize={21} value={"Низкий"}>Низкий</option>
-                                <option fontSize={21} value={"Средний"}>Средний</option>
-                                <option fontSize={21} value={"Высокий"}>Высокий</option>
-                            </Select>
-                        </FormControl>
-                        <FormControl mt={4}>
-                            <FormLabel>Категория</FormLabel>
-                           
-                        </FormControl>
-                        <FormControl mt={4}>
-                            <FormLabel>Дата выполнения</FormLabel>
-                            <Input
-                                name="dueDate"
-                                value={editTaskData.dueDate}
-                                onChange={handleInputChange}
-                            />
-                        </FormControl>
-                        <FormControl mt={4}>
-                            <FormLabel>Крайний срок</FormLabel>
-                            <Input
-                                name="dateTimeOfExecution"
-                                value={editTaskData.dateTimeOfExecution}
-                                onChange={handleInputChange}
-                            />
-                        </FormControl>
-                    </ModalBody>
 
-                    <ModalFooter>
-                        <Button colorScheme="blue" mr={3} onClick={handleUpdateTask}>
-                            Сохранить
-                        </Button>
-                        <Button onClick={handleCloseEditModal}>Отмена</Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            {/* Отказаться от этого способа обработки данных в форме, сделать нормальный */}
+            <Modal isOpen={isEditModalOpen} onClose={handleCloseEditModal}>
+            <ModalOverlay />
+            <ModalContent>
+                <ModalHeader>Редактировать задачу</ModalHeader>
+                <ModalBody>
+                    <FormControl>
+                        <FormLabel>Заголовок</FormLabel>
+                        <Input
+                            name="title"
+                            value={editTaskData.title}
+                            onChange={handleInputChange}
+                        />
+                    </FormControl>
+                    <FormControl mt={4}>
+                        <FormLabel>Описание</FormLabel>
+                        <Input
+                            name="description"
+                            value={editTaskData.description}
+                            onChange={handleInputChange}
+                        />
+                    </FormControl>
+                    <FormControl mt={4}>
+                        <FormLabel>Приоритет</FormLabel>
+                        <Select
+                            name="priority"
+                            value={editTaskData.priority}
+                            onChange={handleInputChange}
+                            fontSize={21}
+                            marginBottom={"7px"}
+                        >
+                            <option value={"Низкий"}>Низкий</option>
+                            <option value={"Средний"}>Средний</option>
+                            <option value={"Высокий"}>Высокий</option>
+                        </Select>
+                    </FormControl>
+                    {/*<FormControl mt={4}>
+                        <FormLabel>Категория</FormLabel>
+                        // TODO: Implement category selection
+                    </FormControl>*/}
+                    <FormControl mt={4}>
+                        <FormLabel>Дата выполнения</FormLabel>
+                        {/* <Input
+                            name="dueDate"
+                            value={formatDate(editTaskData.dueDate)}  // Использовать функцию форматирования
+                            onChange={handleInputChange}
+                        /> */}
+                        <Box marginBottom={"14px"} fontSize={21}>
+                                            <DatePicker className='font-semibold' selected={endDate} onChange={handleDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
+                                            </DatePicker>
+                                        </Box>
+                    </FormControl>
+                    <FormControl mt={4}>
+                        <FormLabel>Крайний срок</FormLabel>
+                        <Input
+                            name="dateTimeOfExecution"
+                            value={formatDate(editTaskData.dateTimeOfExecution)}  // Использовать функцию форматирования
+                            onChange={handleInputChange}
+                        />
+                    </FormControl>
+                </ModalBody>
+
+                <ModalFooter>
+                    <Button colorScheme="blue" mr={3} onClick={handleEditTask}>
+                        Сохранить
+                    </Button>
+                    <Button onClick={handleCloseEditModal}>Отмена</Button>
+                </ModalFooter>
+            </ModalContent>
+        </Modal>
 
         </Card>
 
