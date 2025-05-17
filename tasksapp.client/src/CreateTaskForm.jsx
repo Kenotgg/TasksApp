@@ -21,13 +21,15 @@ export default function CreateTaskForm({ onAddTask }) {
     let isValid = true;
     const toast = useToast();
     // Состояние для хранения дедлайна
-    const [endDate, setEndDate] = useState(() => {
-        const now = new Date();
-        const currentDay = now.getDay();
-        now.setDate(currentDay + 7);
-        now.setSeconds(0, 0);
-        return now;
-    });
+    const [endDate, setEndDate] = useState(new Date());
+
+    // const [endDate, setEndDate] = useState(() => {
+    //     const now = new Date();
+    //     const currentDay = now.getDay();
+    //     now.setDate(currentDay + 7);
+    //     now.setSeconds(0, 0);
+    //     return now;
+    // });
 
     // Обработчик создания задачи, отправляет запрос на сервер
     const handleCreateTask = async (event) => {
@@ -36,13 +38,14 @@ export default function CreateTaskForm({ onAddTask }) {
         if (!isValid) {
             return;
         }
+        
         console.log(title);
         const dataToAdd = {
             Title: title,
             Description: description,
             Priority: priority,
             Category: category,
-            DueDate: endDate.toISOString()
+            DueDate: endDate.toISOString(),
         }
         try {
             const response = await fetch(`https://localhost:7148/api/Tasks/addTask`, {
@@ -54,7 +57,17 @@ export default function CreateTaskForm({ onAddTask }) {
             });
             if (response.ok) {
                 console.log('Задача успешно добавлена!');
+                setTitle('');
+                setDescription('');
+                setPriority('');
+                setCategory('');
+                setPriority('Средний');
+                const now = new Date();
+                setEndDate(now);
+                console.log(endDate);
                 onAddTask();
+                toast({title: 'Задача добавлена.'})
+                
             }
             else {
                 const errorText = await response.text();
@@ -70,6 +83,7 @@ export default function CreateTaskForm({ onAddTask }) {
     const handleTitleChange = (event) => {
         setTitle(event.target.value);
         setTitleError(event.target.value ? '' : 'Название задачи обязательно для заполнения.');
+        // toast ({title: titleError});
     }
     const handleDescriptionChange = (event) => {
         setDescription(event.target.value);
@@ -84,7 +98,7 @@ export default function CreateTaskForm({ onAddTask }) {
     const handleDataChange = (date) => {
         setEndDate(date);
         setEndDateError(date ? '' : 'Дата обязательна для заполнения.')
-        toast({ title: "Изменяем дату" });
+        toast({ title: 'Конечный срок изменен.' });
     }
     
     // Функция для валидации полей формы
@@ -109,23 +123,22 @@ export default function CreateTaskForm({ onAddTask }) {
             <Box p={6} border={"2px solid"} marginTop={5} borderColor={'gray.200'} borderRadius={"md"} boxShadow={"md"}>
                 <Text fontWeight={'bold'} className='font-weight-bold' fontSize={28} marginBottom={"7px"}>Добавить задачу:</Text>
                 <Text fontWeight={'bold'} className='font-weight-bold' fontSize={21}>Введите название:</Text>
-                <Input marginBottom={"7px"} placeholder='Название задачи' fontSize={21} onChange={handleTitleChange} ></Input>
+                <Input marginBottom={"7px"} placeholder='Название задачи' fontSize={21} value={title} onChange={handleTitleChange} ></Input>
                 <Text fontWeight={'bold'} className='font-weight-bold' fontSize={21}>Введите описание</Text>
-                <Textarea marginBottom={"7px"} placeholder='Описание' fontSize={21} onChange={handleDescriptionChange} />
+                <Textarea marginBottom={"7px"} placeholder='Описание' value={description} fontSize={21} onChange={handleDescriptionChange} />
                 <Text fontWeight={'bold'} className='font-weight-bold' fontSize={21}>Выберите приоритет:</Text>
                 <Select fontSize={21} marginBottom={"7px"} value={priority} onChange={handleTPriorityChange}>
                     <option fontSize={21} value={"Низкий"}>Низкий</option>
                     <option fontSize={21} value={"Средний"}>Средний</option>
                     <option fontSize={21} value={"Высокий"}>Высокий</option>
                 </Select>
-                <Text fontWeight={'bold'} className='font-weight-bold' fontSize={21}>Введите категорию:</Text>
-                <Input fontSize={21} marginBottom={"7px"} placeholder='Категория' onChange={handleCategoryChange} />
+                <Text fontWeight={'bold'} className='font-weight-bold'  fontSize={21}>Введите категорию:</Text>
+                <Input fontSize={21} marginBottom={"7px"} value={category} placeholder='Категория' onChange={handleCategoryChange} />
                 <Text fontWeight={'bold'} className='font-weight-bold' fontSize={21}>Введите крайний срок:</Text>
                 <Box marginBottom={"14px"} fontSize={21}>
                     <DatePicker className='font-semibold' selected={endDate} onChange={handleDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
                     </DatePicker>
                 </Box>
-                <Text fontWeight={'bold'} className='font-weight-bold text-l'></Text>
                 {/* Кнопка для отправки результата */}
                 <Box display={'flex'} alignItems={'center'} justifyContent={'center'}>
                     <Button onClick={handleCreateTask} fontSize={21} width={150} color={'white'} backgroundColor={'yellow.400'}>Создать</Button>

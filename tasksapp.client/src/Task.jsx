@@ -1,7 +1,7 @@
 // Импорт различных библиотек для работы
 import { useToast, Card, Select, AlertDialog, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Input, ModalFooter, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button, CardFooter, Spacer, Stack, CardHeader, Divider, CardBody, Text, AbsoluteCenter, Box, Checkbox, textDecoration, IconButton, Flex } from '@chakra-ui/react';
-import { format } from 'date-fns';
-import { useState } from 'react';
+import { format, isValid, parseISO } from 'date-fns';
+import { useState, useEffect } from 'react';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import React, { useRef } from 'react';
 import DatePicker from "react-datepicker";
@@ -11,7 +11,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import ru from 'date-fns/locale/ru';
 import { registerLocale, setDefaultLocale } from 'react-datepicker';
 
-export default function Task({ title, description, priority, dueDate, isCompleted: initialIsCompleted, updateTasksList, category, dateTimeOfExecution, taskID }) {
+export default function Task({ title, description, priority, dueDate, dateTimeOfExecution, isCompleted: initialIsCompleted, updateTasksList, category, id }) {
     // Переменные для хранения состояний
     const [isCompleted, setIsCompleted] = useState(initialIsCompleted);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(null);
@@ -23,26 +23,66 @@ export default function Task({ title, description, priority, dueDate, isComplete
     const [endDateError, setEndDateError] = useState('');
     const [titleError, setTitleError] = useState('');
     // Состояния для хранения даты при редактировании
-    const [executionDate, setexecutionDate] = useState(() => {
-        const now = new Date();
-        const currentDay = now.getDay();
-        now.setDate(currentDay + 7);
-        now.setSeconds(0, 0);
-        return now;
-    });
+    // const [executionDate, setexecutionDate] = useState(() => {
+    //     const now = new Date();
+    //     const currentDay = now.getDay();
+    //     now.setDate(currentDay + 7);
+    //     now.setSeconds(0, 0);
+    //     return now;
+    // });
 
-    const [endDate, setEndDate] = useState(() => {
-        const now = new Date();
-        const currentDay = now.getDay();
-        now.setDate(currentDay + 7);
-        now.setSeconds(0, 0);
-        return now;
-    });
-  
+     const [executionDate, setexecutionDate] = useState(null);
+     const [endDate, setEndDate] = useState(null);
+     useEffect(() => {
+         const setDate = (dateString, setter) => {
+      if (dateString) {
+        try {
+          const parsedDate = parseISO(dateString);
+          if (isValid(parsedDate)) {
+            setter(parsedDate);
+          } else {
+            console.error("Невалидная дата:", dateString);
+            setter(null);
+          }
+        } catch (error) {
+          console.error("Ошибка при преобразовании даты:", error);
+          setter(null);
+        }
+      } else {
+        setter(null);
+      }
+    };
+
+    // Устанавливаем даты при загрузке формы
+    setDate(dueDate, setEndDate);
+    setDate(dateTimeOfExecution, setexecutionDate);
+  }, [dueDate, dateTimeOfExecution]); // Зависимости от пропсов
+    // const [endDate, setEndDate] = useState(() => {
+    //     const now = new Date();
+    //     const currentDay = now.getDay();
+    //     now.setDate(currentDay + 7);
+    //     now.setSeconds(0, 0);
+    //     return now;
+    // });
+
+    //  const [endDate, setEndDate] = useState(() => {
+    //     const now = new Date();
+    //     const currentDay = now.getDay();
+    //     now.setDate(currentDay + 7);
+    //     now.setSeconds(0, 0);
+    //     return now;
+    // });
+
+//     useEffect(() => {
+//     setEndDate(dueDate);
+//   }, []);
+//    useEffect(() => {
+//     setexecutionDate(dateTimeOfExecution);
+//   }, []); 
 
     // Данные задачи при редактировании
     const [editTaskData, setEditTaskData] = useState({
-        id: taskID,
+        id: id,
         title: title,
         description: description,
         priority: priority,
@@ -52,10 +92,17 @@ export default function Task({ title, description, priority, dueDate, isComplete
         dateTimeOfExecution: dateTimeOfExecution
     })
 
-    const handleDataChange = (date) => {
+    const handleEndDateDataChange = (date) => {
         setEndDate(date);
         setEndDateError(date ? '' : 'Дата обязательна для заполнения.')
-        toast({ title: "Изменяем дату" });
+        // toast({ title: "Изменяем дату" });
+        updateTasksList();
+    }
+
+     const handleExecutionDataChange = (date) => {
+        setexecutionDate(date);
+        setEndDateError(date ? '' : 'Дата обязательна для заполнения.')
+        // toast({ title: "Изменяем дату" });
         updateTasksList();
     }
 
@@ -66,7 +113,7 @@ export default function Task({ title, description, priority, dueDate, isComplete
         }
         try {
             const date = new Date(inputDate);
-            const formattedDate = format(date, 'dd день MM месяц yyyy год в HH часов и mm минут.')
+            const formattedDate = format(date, 'dd.MM.yyyy HH:mm.')
             return formattedDate;
         } catch (error) {
             console.error("Error formatting date: ", error);
@@ -93,29 +140,26 @@ export default function Task({ title, description, priority, dueDate, isComplete
     // Функция отправляющая запрос на изменение задачи на сервер с входными параметрами
     const handleEditTask = async (event) => {
         event.preventDefault();
-         console.log(taskID + "Task ID");
-        const dataForEdit = {
-    Title: title, // Начинаем с большой буквы
-    Description: description,
-    DueDate: dueDate.toISOString(),
-    DateTimeOfExecution: DateTimeOfExecution.toISOString(), 
-    Priority: priority,
-    Category: category,
-    IsCompleted: false,
-    Id: taskID // Добавляем Id
-        }
-        console.log(dataForEdit.DueDate);
-       
+         console.log(id + "Task ID");
+    //     const dataForEdit = {
+    // Title: title, // Начинаем с большой буквы
+    // Description: description,
+    // DueDate: dueDate.toISOString(),
+    // DateTimeOfExecution: DateTimeOfExecution.toISOString(), 
+    // Priority: priority,
+    // Category: category,
+    // IsCompleted: false,
+    // Id: taskID // Добавляем Id
+    //     }
+
+        //if (endDate && isValid(endDate)
+const dueDateToAdd = endDate.toISOString();
+const executionDateToAdd = executionDate.toISOString();
         try {
-            const response = await fetch(`https://localhost:7148/api/Tasks/editTask}`, {
+            const response = await fetch(`https://localhost:7148/api/Tasks/editTask?id=${id}&title=${editTaskData.title}&category=${editTaskData.category}&priority=${editTaskData.priority}&description=${editTaskData.description}&dueDate=${dueDateToAdd}&dateTimeOfExecution=${executionDateToAdd}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dataForEdit),
             });
-            console.log(response.body.DueDate + "rbodydueDate");
-            console.log(response.body.title + "rbodyTitle");
+           
 
             if (response.ok) {
                 console.log("Задача успешно обновлена.");
@@ -156,7 +200,7 @@ export default function Task({ title, description, priority, dueDate, isComplete
         const newIsCompleted = event.target.checked;
         setIsCompleted(newIsCompleted);
         try {
-            const response = await fetch(`https://localhost:7148/api/Tasks/EditTaskCompletion?id=${taskID}&isCompleted=${newIsCompleted}`, {
+            const response = await fetch(`https://localhost:7148/api/Tasks/EditTaskCompletion?id=${id}&isCompleted=${newIsCompleted}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -231,7 +275,10 @@ export default function Task({ title, description, priority, dueDate, isComplete
             <CardBody>
                 <Text fontSize={21}>{description}</Text>
                 <Text color={'gray.600'} fontSize={17}>{'Выполнить до: ' + formatDate(dueDate)}</Text>
-                <Text color={'gray.600'} fontSize={17}>{'Готово в: ' + formatDate(dateTimeOfExecution)}</Text>
+                {isCompleted && (
+                    <Text color={'gray.600'} fontSize={17}>{'Выполненно: ' + formatDate(dateTimeOfExecution)}</Text>
+                )}
+                
                 <Text color={'gray.600'} fontSize={17}>Приоритет: {priority + '.'}</Text>
                 <Stack marginTop={3}>
                     <Flex>
@@ -243,7 +290,7 @@ export default function Task({ title, description, priority, dueDate, isComplete
                             size="sm">
                         </IconButton>
                         <IconButton aria-label="Удалить задачу"
-                            onClick={() => handleOpenDeleteDialog(taskID)}
+                            onClick={() => handleOpenDeleteDialog(id)}
                             icon={<DeleteIcon />}
                             size="sm">
                         </IconButton>
@@ -323,20 +370,29 @@ export default function Task({ title, description, priority, dueDate, isComplete
                             </Select>
                         </FormControl>
                         <FormControl mt={4}>
+                            {/* <FormLabel fontSize={21}>Категория:</FormLabel>
+                            <Input fontSize={21} marginBottom={"7px"} placeholder='Категория' value={editTaskData.category} onChange={handleInputChange} /> */}
+
                             <FormLabel fontSize={21}>Категория:</FormLabel>
-                            <Input fontSize={21} marginBottom={"7px"} placeholder='Категория' value={editTaskData.category} onChange={handleInputChange} />
+                            <Input
+                                fontSize={21}
+                                name="category"
+                                value={editTaskData.category}
+                                onChange={handleInputChange}
+                            />
                         </FormControl>
                         <FormControl mt={4}>
-                            <FormLabel fontSize={21}>Дата выполнения:</FormLabel>
+                            <FormLabel fontSize={21}>Выполнить до:</FormLabel>
                             <Box marginBottom={"14px"} fontSize={21}>
-                                <DatePicker fontSize={21} className='font-semibold' selected={endDate} onChange={handleDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
+                                <DatePicker fontSize={21} className='font-semibold' selected={endDate} onChange={handleEndDateDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
                                 </DatePicker>
                             </Box>
                         </FormControl>
                         <FormControl mt={4}>
-                            <FormLabel fontSize={21}>Крайний срок:</FormLabel>
+                            
+                            <FormLabel fontSize={21}>Выполненно:</FormLabel>
                             <Box marginBottom={"14px"} fontSize={21}>
-                                <DatePicker fontSize={21} className='font-semibold' selected={executionDate} onChange={handleDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
+                                <DatePicker fontSize={21} className='font-semibold' selected={executionDate} onChange={handleExecutionDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
                                 </DatePicker>
                             </Box>
                         </FormControl>
