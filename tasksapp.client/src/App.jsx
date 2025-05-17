@@ -153,20 +153,30 @@ export default function App() {
                 <Text fontWeight={"bold"} className='font-weight-bold' fontSize={28}>Задачи:</Text>
                 <Stack direction={"row"}>
                     {/* Выбор сортировки */}
-                <Select border={"2px solid black"} height={'25'} width={'230px'} borderRadius={'base'} _focus={{borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500",}} style={{ marginRight: "20px"}} value={sortType} onChange={onSwitchSortOrder}>
-                    <option value="dateTimeOfExecution">По дате выполнения</option>
-                    <option value="dueDate">По дате крайнего срока</option>
-                    <option value="priority">По приоритету</option>
-                </Select>
+                    <Box>
+                        <Text>Сортировка</Text>
+                        <Select border={"2px solid black"} height={'25'} width={'230px'} borderRadius={'base'} _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500", }} style={{ marginRight: "20px" }} value={sortType} onChange={onSwitchSortOrder}>
+                            <option value="dateTimeOfExecution">По дате выполнения</option>
+                            <option value="dueDate">По дате крайнего срока</option>
+                            <option value="priority">По приоритету</option>
+                        </Select>
+                    </Box>
+                     <Box>
+                        <Text>Фильтрация</Text>
+                        <Select border={"2px solid black"} height={'25'} width={'230px'} borderRadius={"base"} _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500", }} value={groupType} onChange={onSwitchGroupOrder}>
+                            <option value="default">По умолчанию</option>
+                            <option value="noGroup">За все время</option>
+                            <option value="Сегодня">Сегодня</option>
+                            <option value="Завтра">Завтра</option>
+                            <option value="На этой неделе">На этой неделе</option>
+                            <option value="На следующей неделе">Следующая неделя</option>
+                        </Select>
+                     </Box>
+
+
+               
                 {/* Выбор группировки */}
-                <Select border={"2px solid black"} height={'25'} width={'230px'} borderRadius={"base"} _focus={{borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500",}} value={groupType} onChange={onSwitchGroupOrder}>
-                    <option value="default">По умолчанию</option>
-                    <option value="noGroup">Все</option>
-                    <option value="Сегодня">Сегодня</option>
-                    <option value="Завтра">Завтра</option>
-                    <option value="На этой неделе">На этой неделе</option>
-                    <option value="На следующей неделе">Следующая неделя</option>
-                </Select>
+                
                 </Stack>
                 
                 {/* Задачи в виде карточек */}

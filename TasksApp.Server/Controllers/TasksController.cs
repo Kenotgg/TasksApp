@@ -53,9 +53,9 @@ namespace TasksApp.Server.Controllers
         }
         //Изменить задачу
         [HttpPut("editTask")]
-        public async Task<IActionResult> EditTask(int id, string title, string description, DateTime dueDate, string priority, string category, bool isCompleted, DateTime dateTimeOfExecution)
+        public async Task<IActionResult> EditTask(int id, [FromBody] EditTaskRequest request)
         {
-            var editedTask = await _tasksService.EditTask(id, title, description, dueDate, priority, category, isCompleted, dateTimeOfExecution);
+            var editedTask = await _tasksService.EditTask(id, request.Title,  request.Description, request.DueDate, request.Priority, request.Category, request.IsCompleted, request.DateTimeOfExecution);
             if(editedTask != null) 
             {
             return Ok(editedTask);

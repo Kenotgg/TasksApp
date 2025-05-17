@@ -57,28 +57,7 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     setDate(dueDate, setEndDate);
     setDate(dateTimeOfExecution, setexecutionDate);
   }, [dueDate, dateTimeOfExecution]); // Зависимости от пропсов
-    // const [endDate, setEndDate] = useState(() => {
-    //     const now = new Date();
-    //     const currentDay = now.getDay();
-    //     now.setDate(currentDay + 7);
-    //     now.setSeconds(0, 0);
-    //     return now;
-    // });
-
-    //  const [endDate, setEndDate] = useState(() => {
-    //     const now = new Date();
-    //     const currentDay = now.getDay();
-    //     now.setDate(currentDay + 7);
-    //     now.setSeconds(0, 0);
-    //     return now;
-    // });
-
-//     useEffect(() => {
-//     setEndDate(dueDate);
-//   }, []);
-//    useEffect(() => {
-//     setexecutionDate(dateTimeOfExecution);
-//   }, []); 
+   
 
     // Данные задачи при редактировании
     const [editTaskData, setEditTaskData] = useState({
@@ -136,29 +115,58 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
             [e.target.name]: e.target.value,
         });
     };
-
     // Функция отправляющая запрос на изменение задачи на сервер с входными параметрами
-    const handleEditTask = async (event) => {
+    const handleEndEditTask = async (event) => {
         event.preventDefault();
          console.log(id + "Task ID");
-    //     const dataForEdit = {
-    // Title: title, // Начинаем с большой буквы
-    // Description: description,
-    // DueDate: dueDate.toISOString(),
-    // DateTimeOfExecution: DateTimeOfExecution.toISOString(), 
-    // Priority: priority,
-    // Category: category,
-    // IsCompleted: false,
-    // Id: taskID // Добавляем Id
-    //     }
+        if(editTaskData.title === null || editTaskData.title === undefined || editTaskData.title.trim() === ""){
+            toast({title: 'Нельзя ввести пустой заголовок.'});
+            return;
+        }
 
-        //if (endDate && isValid(endDate)
-const dueDateToAdd = endDate.toISOString();
-const executionDateToAdd = executionDate.toISOString();
+        if (!isValid(endDate)){
+                toast({title: 'Конечный срок имел некорректный формат', isClosable: 'true'});
+                return;
+            }
+        else if (!isValid(executionDate)){
+                toast({title: 'Дата выполнения имела некорректный формат', isClosable: 'true'});
+                return;
+            }
+        
+        const dueDateToAdd = endDate.toISOString();
+        const executionDateToAdd = executionDate.toISOString();
+        
+        const dataToSend = {
+        // id: 75,
+         title: editTaskData.title || "", // Если title null или undefined, ставим ""
+  description: editTaskData.description || "", // Если description null или undefined, ставим ""
+  dueDate: dueDateToAdd, // Если dueDateToAdd null или undefined, ставим null
+  priority: editTaskData.priority || "", // Если priority null или undefined, ставим ""
+  category: editTaskData.category || "", // Если category null или undefined, ставим ""
+  isCompleted: editTaskData.isCompleted || false, // Если isCompleted null или undefined, ставим false
+  dateTimeOfExecution: executionDateToAdd, // Если dateTimeOfExecutionToAdd null или undefined, ставим null
+        };
         try {
-            const response = await fetch(`https://localhost:7148/api/Tasks/editTask?id=${id}&title=${editTaskData.title}&category=${editTaskData.category}&priority=${editTaskData.priority}&description=${editTaskData.description}&dueDate=${dueDateToAdd}&dateTimeOfExecution=${executionDateToAdd}`, {
+            console.log("Перед отправкой");
+            console.log("Заголовки:", { 'Content-Type': 'application/json' });
+            console.log("Тело запроса:", JSON.stringify(dataToSend));
+            //  console.log(dataToSend.id);
+            // console.log(dataToSend.title);
+            // console.log(dataToSend.description);
+            // console.log(dataToSend.category);
+            // console.log(dataToSend.priority);
+            // console.log(dataToSend.dueDate);
+            // console.log(dataToSend.isCompleted);
+            // console.log(dataToSend.dateTimeOfExecution);
+            
+            const response = await fetch(`https://localhost:7148/api/Tasks/editTask?id=${id}`, {
                 method: 'PUT',
+                headers:{
+                    'Content-Type': 'application/json' // Указываем тип контента
+                },
+                body: JSON.stringify(dataToSend)
             });
+            console.log("url " + response.url);
            
 
             if (response.ok) {
@@ -282,7 +290,7 @@ const executionDateToAdd = executionDate.toISOString();
                 <Text color={'gray.600'} fontSize={17}>Приоритет: {priority + '.'}</Text>
                 <Stack marginTop={3}>
                     <Flex>
-                        <Checkbox size={'lg'} isChecked={isCompleted} onChange={handleCheckBoxChange}></Checkbox>
+                        <Checkbox size={'lg'}  isChecked={isCompleted} onChange={handleCheckBoxChange}></Checkbox>
                         <Spacer />
                         <IconButton marginRight={1} aria-label="Редактировать задачу"
                             onClick={handleOpenEditModal}
@@ -398,7 +406,7 @@ const executionDateToAdd = executionDate.toISOString();
                         </FormControl>
                     </ModalBody>
                     <ModalFooter>
-                        <Button colorScheme="blue" mr={3} onClick={handleEditTask}>
+                        <Button colorScheme="blue" mr={3} onClick={handleEndEditTask}>
                             Сохранить
                         </Button>
                         <Button onClick={handleCloseEditModal}>Отмена</Button>

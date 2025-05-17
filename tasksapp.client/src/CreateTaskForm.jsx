@@ -15,21 +15,9 @@ export default function CreateTaskForm({ onAddTask }) {
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState('Средний');
     const [category, setCategory] = useState('');
-    //Состояния ошибок.
-    const [titleError, setTitleError] = useState('');
-    const [endDateError, setEndDateError] = useState('');
-    let isValid = true;
-    const toast = useToast();
-    // Состояние для хранения дедлайна
     const [endDate, setEndDate] = useState(new Date());
-
-    // const [endDate, setEndDate] = useState(() => {
-    //     const now = new Date();
-    //     const currentDay = now.getDay();
-    //     now.setDate(currentDay + 7);
-    //     now.setSeconds(0, 0);
-    //     return now;
-    // });
+    const toast = useToast();
+    let isValid = true;
 
     // Обработчик создания задачи, отправляет запрос на сервер
     const handleCreateTask = async (event) => {
@@ -83,7 +71,6 @@ export default function CreateTaskForm({ onAddTask }) {
     const handleTitleChange = (event) => {
         setTitle(event.target.value);
         setTitleError(event.target.value ? '' : 'Название задачи обязательно для заполнения.');
-        // toast ({title: titleError});
     }
     const handleDescriptionChange = (event) => {
         setDescription(event.target.value);
