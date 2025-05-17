@@ -16,6 +16,7 @@ export default function CreateTaskForm({ onAddTask }) {
     const [priority, setPriority] = useState('Средний');
     const [category, setCategory] = useState('');
     const [endDate, setEndDate] = useState(new Date());
+    const [isCompleted, setIsCompleted] = useState(false);
     const toast = useToast();
     let isValid = true;
 
@@ -34,6 +35,8 @@ export default function CreateTaskForm({ onAddTask }) {
             Priority: priority,
             Category: category,
             DueDate: endDate.toISOString(),
+            IsCompleted: isCompleted,
+            dateTimeOfExecution: new Date(0),
         }
         try {
             const response = await fetch(`https://localhost:7148/api/Tasks/addTask`, {
@@ -122,7 +125,7 @@ export default function CreateTaskForm({ onAddTask }) {
                 <Text fontWeight={'bold'} className='font-weight-bold'  fontSize={21}>Введите категорию:</Text>
                 <Input fontSize={21} marginBottom={"7px"} value={category} placeholder='Категория' onChange={handleCategoryChange} />
                 <Text fontWeight={'bold'} className='font-weight-bold' fontSize={21}>Введите крайний срок:</Text>
-                <Box marginBottom={"14px"} fontSize={21}>
+                <Box border={"2px solid black"} borderColor={'gray.200'} borderRadius={"md"} marginBottom={"14px"} fontSize={21}>
                     <DatePicker className='font-semibold' selected={endDate} onChange={handleDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
                     </DatePicker>
                 </Box>

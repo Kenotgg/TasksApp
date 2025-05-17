@@ -2,10 +2,12 @@
 import { useEffect, useState } from 'react';
 import CreateTaskForm from './CreateTaskForm';
 import Task from './Task';
-import { Text, Divider, FormLabel, FormControl, Select, Box, Center,Stack } from '@chakra-ui/react';
+import { Text, Divider, FormLabel, FormControl, Select, Box, Center,Stack, Button, Spacer, IconButton, Flex, AbsoluteCenter } from '@chakra-ui/react';
+import { ArrowForwardIcon,HamburgerIcon,SunIcon,MoonIcon} from '@chakra-ui/icons';
 import './App.css';
 import { fetchTasks } from './services/tasks';
 import { isToday, isTomorrow, isThisWeek, format, isYesterday, addWeeks, startOfWeek } from 'date-fns';
+import DrawerMenu from './DrawerMenu';
 export default function App() {
     // Переменные для хранения состояний
     const [tasks, setTasks] = useState([]);
@@ -136,14 +138,26 @@ export default function App() {
         const nextWeekEnd = addWeeks(nextWeekStart, 1); // Add one week to get the end date
         return taskDate >= nextWeekStart && taskDate < nextWeekEnd; // Check if the task date is within the next week's range
     };
-
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const handleDrawerToggle = () => {
+    setIsDrawerOpen(!isDrawerOpen);
+  };
     return <div>
         {/* Плашка главного меню сверху с логотипом */}
-        <Box display="flex" alignItems="center" justifyContent="center" background={'yellow.400'} height={100}>
-            <Text fontSize={42} fontWeight={'bold'} color={'white'}>MyNotes</Text>
+        <Box display="flex" alignItems="center" justifyContent="space-between" background={'yellow.400'} height={100}>
+            <IconButton margin={5} icon={<HamburgerIcon></HamburgerIcon>} onClick={handleDrawerToggle}>
+                {isDrawerOpen ? 'Close Menu' : 'Open Menu'}
+            </IconButton>
+            <Spacer></Spacer>
+            <Text position={'absolute'} left="45%" alignItems="center" fontSize={42} fontWeight={'bold'} color={'white'}>MyNotes</Text>
+            <IconButton margin={5} icon={<MoonIcon></MoonIcon>}>
+                {isDrawerOpen ? 'Close Menu' : 'Open Menu'}
+            </IconButton>
         </Box>
+        
         {/* Главная секция, которая содержит добавление и вывод задач */}
         <section className='p8 flex flex-row justify-center items-start gap-12'>
+            <DrawerMenu isOpen={isDrawerOpen} onClose={handleDrawerToggle}></DrawerMenu>
             {/* Форма для добавления задачи */}
             <div>
                 <CreateTaskForm onAddTask={updateTasksList}></CreateTaskForm>
@@ -152,8 +166,8 @@ export default function App() {
             <Box style={{width: '700px', height: '700px', overflow: 'auto'}} p={6} border={"2px solid"} marginTop={5} borderColor={'gray.200'} borderRadius={"md"} boxShadow={"md"}>
                 <Text fontWeight={"bold"} className='font-weight-bold' fontSize={28}>Задачи:</Text>
                 <Stack direction={"row"}>
-                    {/* Выбор сортировки */}
                     <Box>
+                         {/* Выбор сортировки */}
                         <Text>Сортировка</Text>
                         <Select border={"2px solid black"} height={'25'} width={'230px'} borderRadius={'base'} _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500", }} style={{ marginRight: "20px" }} value={sortType} onChange={onSwitchSortOrder}>
                             <option value="dateTimeOfExecution">По дате выполнения</option>
@@ -162,6 +176,7 @@ export default function App() {
                         </Select>
                     </Box>
                      <Box>
+                        {/* Выбор группировки */}
                         <Text>Фильтрация</Text>
                         <Select border={"2px solid black"} height={'25'} width={'230px'} borderRadius={"base"} _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500", }} value={groupType} onChange={onSwitchGroupOrder}>
                             <option value="default">По умолчанию</option>
@@ -172,11 +187,6 @@ export default function App() {
                             <option value="На следующей неделе">Следующая неделя</option>
                         </Select>
                      </Box>
-
-
-               
-                {/* Выбор группировки */}
-                
                 </Stack>
                 
                 {/* Задачи в виде карточек */}

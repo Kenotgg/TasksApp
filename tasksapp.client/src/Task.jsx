@@ -1,5 +1,5 @@
 // Импорт различных библиотек для работы
-import { useToast, Card, Select, AlertDialog, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Input, ModalFooter, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button, CardFooter, Spacer, Stack, CardHeader, Divider, CardBody, Text, AbsoluteCenter, Box, Checkbox, textDecoration, IconButton, Flex } from '@chakra-ui/react';
+import { useToast, Card, Select, AlertDialog, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Input, ModalFooter, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button, CardFooter, Spacer, Stack, CardHeader, Divider, CardBody, Text, AbsoluteCenter, Box, Checkbox, textDecoration, IconButton, Flex, border } from '@chakra-ui/react';
 import { format, isValid, parseISO } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
@@ -135,29 +135,20 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
         
         const dueDateToAdd = endDate.toISOString();
         const executionDateToAdd = executionDate.toISOString();
-        
+
         const dataToSend = {
-        // id: 75,
-         title: editTaskData.title || "", // Если title null или undefined, ставим ""
-  description: editTaskData.description || "", // Если description null или undefined, ставим ""
-  dueDate: dueDateToAdd, // Если dueDateToAdd null или undefined, ставим null
-  priority: editTaskData.priority || "", // Если priority null или undefined, ставим ""
-  category: editTaskData.category || "", // Если category null или undefined, ставим ""
-  isCompleted: editTaskData.isCompleted || false, // Если isCompleted null или undefined, ставим false
-  dateTimeOfExecution: executionDateToAdd, // Если dateTimeOfExecutionToAdd null или undefined, ставим null
+            title: editTaskData.title || "", // Если title null или undefined, ставим ""
+            description: editTaskData.description || "", // Если description null или undefined, ставим ""
+            dueDate: dueDateToAdd, // Если dueDateToAdd null или undefined, ставим null
+            priority: editTaskData.priority || "", // Если priority null или undefined, ставим ""
+            category: editTaskData.category || "", // Если category null или undefined, ставим ""
+            isCompleted: editTaskData.isCompleted || false, // Если isCompleted null или undefined, ставим false
+            dateTimeOfExecution: executionDateToAdd || null, // Если dateTimeOfExecutionToAdd null или undefined, ставим null
         };
         try {
             console.log("Перед отправкой");
             console.log("Заголовки:", { 'Content-Type': 'application/json' });
             console.log("Тело запроса:", JSON.stringify(dataToSend));
-            //  console.log(dataToSend.id);
-            // console.log(dataToSend.title);
-            // console.log(dataToSend.description);
-            // console.log(dataToSend.category);
-            // console.log(dataToSend.priority);
-            // console.log(dataToSend.dueDate);
-            // console.log(dataToSend.isCompleted);
-            // console.log(dataToSend.dateTimeOfExecution);
             
             const response = await fetch(`https://localhost:7148/api/Tasks/editTask?id=${id}`, {
                 method: 'PUT',
@@ -352,7 +343,8 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                             <FormLabel fontSize={21}>Описание:</FormLabel>
                             <Input
                                 as="textarea"           // Превращаем в многострочное поле
-                                rows={5}                // Стартовая высота в строках
+                                rows={5}
+                                height={125}           // Стартовая высота в строках
                                 fontSize={21}
                                 resize="vertical"       // Разрешить изменение размера
                                 paddingTop={3}          // Сдвигаем текст к верхнему краю
@@ -391,15 +383,15 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                         </FormControl>
                         <FormControl mt={4}>
                             <FormLabel fontSize={21}>Выполнить до:</FormLabel>
-                            <Box marginBottom={"14px"} fontSize={21}>
-                                <DatePicker fontSize={21} className='font-semibold' selected={endDate} onChange={handleEndDateDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
+                            <Box border={"2px solid black"} borderColor={'gray.200'} borderRadius={"md"} marginBottom={"14px"} fontSize={21}>
+                                <DatePicker  fontSize={21} className='font-semibold' selected={endDate} onChange={handleEndDateDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
                                 </DatePicker>
                             </Box>
                         </FormControl>
                         <FormControl mt={4}>
                             
                             <FormLabel fontSize={21}>Выполненно:</FormLabel>
-                            <Box marginBottom={"14px"} fontSize={21}>
+                            <Box border={"2px solid black"} borderColor={'gray.200'} borderRadius={"md"} marginBottom={"14px"} fontSize={21}>
                                 <DatePicker fontSize={21} className='font-semibold' selected={executionDate} onChange={handleExecutionDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
                                 </DatePicker>
                             </Box>
