@@ -15,7 +15,7 @@ import {
   Text,
   Box
 } from '@chakra-ui/react';
-import { ArrowForwardIcon, HamburgerIcon, SunIcon, SearchIcon,SettingsIcon,CalendarIcon,BellIcon,DeleteIcon,MoonIcon} from '@chakra-ui/icons';
+import { ArrowForwardIcon, HamburgerIcon, SunIcon, SearchIcon, SettingsIcon, CalendarIcon, BellIcon, DeleteIcon, MoonIcon} from '@chakra-ui/icons';
 export default function DrawerMenu({isOpen, onClose, placement= 'left'}) {
   return (
     <>

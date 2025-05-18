@@ -1,12 +1,12 @@
 // Импорт различных библиотек для работы
 import { useToast, Card, Select, AlertDialog, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Input, ModalFooter, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button, CardFooter, Spacer, Stack, CardHeader, Divider, CardBody, Text, AbsoluteCenter, Box, Checkbox, textDecoration, IconButton, Flex, border } from '@chakra-ui/react';
 import { format, isValid, parseISO } from 'date-fns';
-import { useState, useEffect } from 'react';
-import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
+import { useState, useEffect,useCallback } from 'react';
+import { DeleteIcon, EditIcon, BellIcon,CalendarIcon } from '@chakra-ui/icons';
 import React, { useRef } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
+import ReminderSelect from './ReminderSelect';
 // Русификация дат и календаря
 import ru from 'date-fns/locale/ru';
 import { registerLocale, setDefaultLocale } from 'react-datepicker';
@@ -17,11 +17,13 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(null);
     const [taskIdToDelete, setTaskIdToDelete] = useState(null); // Состояние для хранения ID удаляемой задачи
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
     const toast = useToast();
     const cancelRef = React.useRef();
     // Состояния для ошибок
     const [endDateError, setEndDateError] = useState('');
     const [titleError, setTitleError] = useState('');
+     const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
     // Состояния для хранения даты при редактировании
     // const [executionDate, setexecutionDate] = useState(() => {
     //     const now = new Date();
@@ -108,6 +110,81 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     const handleCloseEditModal = () => {
         setIsEditModalOpen(false);
     };
+
+
+    // Функции для открытия закрытия модального окна установки напоминаний
+    const handleOpenNotificationModal = () => {
+        setIsNotificationModalOpen(true);
+        
+    };
+
+    const handleCloseNotificationModal = () => {
+        setIsNotificationModalOpen(false);
+    };
+
+
+    const handleSaveNotificationInModal = () => { 
+        setIsNotificationModalOpen(false);
+        const taskDueDate = new Date(editTaskData.dueDate);
+        selectedReminders.forEach(reminderValue => {
+            const reminderTime = subtractMinutes(taskDueDate, reminderValue);
+            
+            const notification = {
+                id: Date.now(),
+                taskId: editTaskData.id,
+                time: reminderTime.toISOString(),
+                title: "Напоминание о задаче!",
+                body: `Задача "${editTaskData.title}" должна быть выполнена.`,
+            };
+            
+            setScheduledNotifications(prevNotifications => [...prevNotifications, notification]);
+        })
+        console.log(reminderTime);
+    };
+
+
+
+     const showNotification = useCallback((title, body) => {
+    if (notificationPermission === "granted") {
+      const notification = new Notification(title, {
+        body: body,
+        icon: "/logo192.png",
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+    } else if (notificationPermission === "denied") {
+      alert("Вы запретили показ уведомлений. Разрешите их в настройках браузера.");
+    }
+  }, [notificationPermission]);
+
+    const [scheduledNotifications, setScheduledNotifications] = useState([]);
+    useEffect(() => {
+        scheduledNotifications.forEach(notification => {
+            const timeDiff = new Date(notification.time).getTime() - new Date().getTime();
+
+            if (timeDiff <= 0) {
+                // Время пришло, показываем уведомление
+                showNotification(notification.title, notification.body);
+
+                // Удаляем уведомление из массива
+                setScheduledNotifications(prevNotifications =>
+                    prevNotifications.filter(n => n.id !== notification.id)
+                );
+            } else {
+                // Планируем показ уведомления
+                setTimeout(() => {
+                    showNotification(notification.title, notification.body);
+                    // Удаляем уведомление из массива после показа
+                    setScheduledNotifications(prevNotifications =>
+                        prevNotifications.filter(n => n.id !== notification.id)
+                    );
+                }, timeDiff);
+            }
+        });
+    }, [scheduledNotifications, showNotification]);
 
     const handleInputChange = (e) => {
         setEditTaskData({
@@ -262,11 +339,47 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
         textDecoration: isCompleted ? 'line-through' : 'none',
     };
 
+
+   const [selectedReminders, setSelectedReminders] = useState([]);
+
+  const handleReminderChange = (values) => {
+    console.log(selectedReminders);
+    setSelectedReminders(values);
+    console.log('Выбраны значения:', values);
+  };
+ 
+
+  const handleDateChange = (date) => {
+    setStartDate(date);
+  };
+
+  const handleCalendarOpen = () => {
+    setIsCalendarOpen(true);
+  };
+
+  const handleCalendarClose = () => {
+    setIsCalendarOpen(false);
+  };
+
+  const subtractMinutes = (date, minutesToSubtract) => {
+    const newDate = new Date(date); // Создаем копию объекта Date
+    newDate.setMinutes(newDate.getMinutes() - minutesToSubtract);
+    return newDate;
+  };
     return (
         // Карточка со всей информацией о заметке
         <Card style={cardStyle} marginTop={5}>
             <CardHeader>
-                <Text fontWeight={"bold"} fontSize={24} >{title + ':'}</Text>
+                <Stack direction={"row"}>
+                    <Text fontWeight={"bold"} fontSize={24} >{title + ':'}</Text>
+                    <Spacer></Spacer>
+                    <IconButton marginRight={1} aria-label="Установить напоминание"
+                        onClick={handleOpenNotificationModal}
+                        icon={<BellIcon />}
+                        size="sm">
+                    </IconButton>
+                </Stack>
+
             </CardHeader>
             <Box position='relative' padding='1'>
                 <Divider />
@@ -277,22 +390,19 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                 {isCompleted && (
                     <Text color={'gray.600'} fontSize={17}>{'Выполненно: ' + formatDate(dateTimeOfExecution)}</Text>
                 )}
-                
+
                 <Text color={'gray.600'} fontSize={17}>Приоритет: {priority + '.'}</Text>
                 <Stack marginTop={3}>
                     <Flex>
-                        <Checkbox size={'lg'}  isChecked={isCompleted} onChange={handleCheckBoxChange}></Checkbox>
+                        <input type='checkbox' style={{ width: '25px', height: '25px' }} checked={isCompleted} onChange={handleCheckBoxChange}></input>
+                        {/* <Checkbox size={'lg'}  isChecked={isCompleted} onChange={handleCheckBoxChange}></Checkbox> */}
                         <Spacer />
                         <IconButton marginRight={1} aria-label="Редактировать задачу"
                             onClick={handleOpenEditModal}
                             icon={<EditIcon />}
                             size="sm">
                         </IconButton>
-                        <IconButton aria-label="Удалить задачу"
-                            onClick={() => handleOpenDeleteDialog(id)}
-                            icon={<DeleteIcon />}
-                            size="sm">
-                        </IconButton>
+
                     </Flex>
                 </Stack>
             </CardBody>
@@ -328,7 +438,17 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
             <Modal isOpen={isEditModalOpen} onClose={handleCloseEditModal}>
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader fontSize={24}>Редактировать задачу</ModalHeader>
+                    <ModalHeader fontSize={24}>
+                        <Stack direction={'row'}>
+                            <Text>Редактировать задачу:</Text>
+                            <Spacer></Spacer>
+                            <IconButton aria-label="Удалить задачу"
+                                onClick={() => handleOpenDeleteDialog(id)}
+                                icon={<DeleteIcon />}
+                                size="sm">
+                            </IconButton>
+                        </Stack>
+                    </ModalHeader>
                     <ModalBody>
                         <FormControl>
                             <FormLabel fontSize={21}>Заголовок:</FormLabel>
@@ -370,9 +490,6 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                             </Select>
                         </FormControl>
                         <FormControl mt={4}>
-                            {/* <FormLabel fontSize={21}>Категория:</FormLabel>
-                            <Input fontSize={21} marginBottom={"7px"} placeholder='Категория' value={editTaskData.category} onChange={handleInputChange} /> */}
-
                             <FormLabel fontSize={21}>Категория:</FormLabel>
                             <Input
                                 fontSize={21}
@@ -384,12 +501,12 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                         <FormControl mt={4}>
                             <FormLabel fontSize={21}>Выполнить до:</FormLabel>
                             <Box border={"2px solid black"} borderColor={'gray.200'} borderRadius={"md"} marginBottom={"14px"} fontSize={21}>
-                                <DatePicker  fontSize={21} className='font-semibold' selected={endDate} onChange={handleEndDateDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
+                                <DatePicker fontSize={21} className='font-semibold' selected={endDate} onChange={handleEndDateDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
                                 </DatePicker>
                             </Box>
                         </FormControl>
                         <FormControl mt={4}>
-                            
+
                             <FormLabel fontSize={21}>Выполненно:</FormLabel>
                             <Box border={"2px solid black"} borderColor={'gray.200'} borderRadius={"md"} marginBottom={"14px"} fontSize={21}>
                                 <DatePicker fontSize={21} className='font-semibold' selected={executionDate} onChange={handleExecutionDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
@@ -402,6 +519,35 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                             Сохранить
                         </Button>
                         <Button onClick={handleCloseEditModal}>Отмена</Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* Окно для установки напоминания */}
+            <Modal isOpen={isNotificationModalOpen} onClose={handleCloseNotificationModal}>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader fontSize={24}>
+                        <Text>Установить напоминание:</Text>
+                    </ModalHeader>
+                    <ModalBody>
+                        <FormLabel>
+                            <Text fontSize={21}>Заголовок:</Text>
+                            <Text fontWeight={'normal'} fontSize={21}>{editTaskData.title}</Text>
+                            <Text fontSize={21}>Описание:</Text>
+                            <Text fontWeight={'normal'} fontSize={21}>{editTaskData.description}</Text>
+                            <Text fontSize={21}>Время срабатывания:</Text>
+                            <Text fontWeight={'normal'} fontSize={21}>{formatDate(editTaskData.dueDate)}</Text>
+                            <Text fontSize={21}>Напомнить:</Text>
+                            <ReminderSelect onChange={handleReminderChange} value={selectedReminders}></ReminderSelect>
+                        </FormLabel>
+                    </ModalBody>
+                    <ModalFooter>
+                        
+                        <Button colorScheme="blue" mr={3} onClick={handleSaveNotificationInModal}>
+                            Сохранить
+                        </Button>
+                        <Button onClick={handleCloseNotificationModal}>Отмена</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
