@@ -50,7 +50,6 @@
 5)Отметить выполненной
 
 5.1) Нажмите на галочку, чтобы отметить задачу выполненной:
-
 <img width="34" alt="image" src="https://github.com/user-attachments/assets/28aa6cb3-4bd7-4b00-9df5-1d25db1e4ae5" />
 
 
