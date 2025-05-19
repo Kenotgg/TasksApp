@@ -4,7 +4,7 @@
 
 1)На входе вы можете видеть интерфейс программы.
 
-<img width="467" alt="image" src="https://github.com/user-attachments/assets/091642f4-af6f-45c8-a913-e229a7752ca5" />
+<img width="960" alt="Снимок экрана 2025-05-20 001605" src="https://github.com/user-attachments/assets/d880be07-bf71-4b14-b5dc-79ce247463ea" />
 
 2)Создать задачу
 2.1 Ввести данные в поля и выбрать дату через календарь.
