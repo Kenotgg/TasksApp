@@ -40,7 +40,8 @@
 
 4.1) Нажмите кнопку удаления:
 
-<img width="40" alt="image" src="https://github.com/user-attachments/assets/36dfb7bf-e2d4-4a32-bab6-1a749be4360c" />
+<img width="38" alt="image" src="https://github.com/user-attachments/assets/12ff39e3-e4ca-4b25-b4f5-919e2c107032" />
+
 
 4.2)В открывшемся меню нажмите на «удалить».
 
