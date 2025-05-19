@@ -7,6 +7,7 @@
 <img width="960" alt="Снимок экрана 2025-05-20 001605" src="https://github.com/user-attachments/assets/d880be07-bf71-4b14-b5dc-79ce247463ea" />
 
 2)Создать задачу
+
 2.1 Ввести данные в поля и выбрать дату через календарь.
 
 <img width="188" alt="image" src="https://github.com/user-attachments/assets/5e9e705a-c446-4b09-a917-7e28decd736c" />
@@ -16,6 +17,7 @@
 <img width="122" alt="image" src="https://github.com/user-attachments/assets/7c1fa977-85d3-47ce-892b-4dcd669e5f88" />
 
 2.3)Увидеть созданную задачу
+
 Вы можете найти задачу воспользовавшись группировкой, но в общем случае выберите пункт «По умолчанию».
 
 <img width="104" alt="image" src="https://github.com/user-attachments/assets/1f13afc9-2081-418d-816f-e1442faabbce" />
@@ -25,6 +27,7 @@
 <img width="413" alt="image" src="https://github.com/user-attachments/assets/142f171c-b4ad-431b-85b6-beaaed8d8c32" />
 
 3)Изменение задачи
+
 3.1) Нажмите на иконку изменения задачи:
 
 <img width="21" alt="image" src="https://github.com/user-attachments/assets/ecc076f8-4c96-492d-ba28-6b64165aed81" />
@@ -34,6 +37,7 @@
 <img width="256" alt="image" src="https://github.com/user-attachments/assets/678ba437-7538-4992-a9ed-097dfdfff440" />
 
 4)Удаление задачи:
+
 4.1) Нажмите кнопку удаления:
 
 <img width="40" alt="image" src="https://github.com/user-attachments/assets/36dfb7bf-e2d4-4a32-bab6-1a749be4360c" />
@@ -43,6 +47,7 @@
 <img width="250" alt="image" src="https://github.com/user-attachments/assets/52ec4537-2032-479a-b18f-bca528152434" />
 
 5)Отметить выполненной
+
 5.1) Нажмите на галочку, чтобы отметить задачу выполненной:
 
 <img width="34" alt="image" src="https://github.com/user-attachments/assets/28aa6cb3-4bd7-4b00-9df5-1d25db1e4ae5" />
