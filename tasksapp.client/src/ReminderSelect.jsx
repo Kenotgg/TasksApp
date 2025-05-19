@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import {Text,Box} from "@chakra-ui/react";
+import { useColorModeValue } from "@chakra-ui/react";
 const ReminderSelect = ({ onChange, value }) => {
   const [selectedValues, setSelectedValues] = useState(value || []);
-
+   const textColor = useColorModeValue('black', 'black'); // Черный в светлой, белый в темной
   const handleOptionClick = (optionValue) => {
     console.log(optionValue);
     setSelectedValues((prevValues) => {
@@ -50,6 +51,7 @@ const ReminderSelect = ({ onChange, value }) => {
               border: "1px solid #ccc",
               borderRadius: "4px",
               fontSize: '18px',
+              color: textColor,
               backgroundColor: selectedValues.includes(option.value)
                 ? "#e0e0e0"
                 : "white",

@@ -1,8 +1,8 @@
 // Импорт различных библиотек для работы
 import { useToast, Card, Select, AlertDialog, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Input, ModalFooter, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button, CardFooter, Spacer, Stack, CardHeader, Divider, CardBody, Text, AbsoluteCenter, Box, Checkbox, textDecoration, IconButton, Flex, border } from '@chakra-ui/react';
 import { format, isValid, parseISO } from 'date-fns';
-import { useState, useEffect,useCallback } from 'react';
-import { DeleteIcon, EditIcon, BellIcon,CalendarIcon } from '@chakra-ui/icons';
+import { useState, useEffect, useCallback } from 'react';
+import { DeleteIcon, EditIcon, BellIcon, CalendarIcon } from '@chakra-ui/icons';
 import React, { useRef } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -23,44 +23,53 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     // Состояния для ошибок
     const [endDateError, setEndDateError] = useState('');
     const [titleError, setTitleError] = useState('');
-     const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
+    const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
     // Состояния для хранения даты при редактировании
-    // const [executionDate, setexecutionDate] = useState(() => {
-    //     const now = new Date();
-    //     const currentDay = now.getDay();
-    //     now.setDate(currentDay + 7);
-    //     now.setSeconds(0, 0);
-    //     return now;
-    // });
-
-     const [executionDate, setexecutionDate] = useState(null);
-     const [endDate, setEndDate] = useState(null);
-     useEffect(() => {
-         const setDate = (dateString, setter) => {
-      if (dateString) {
-        try {
-          const parsedDate = parseISO(dateString);
-          if (isValid(parsedDate)) {
-            setter(parsedDate);
-          } else {
-            console.error("Невалидная дата:", dateString);
-            setter(null);
-          }
-        } catch (error) {
-          console.error("Ошибка при преобразовании даты:", error);
-          setter(null);
-        }
-      } else {
-        setter(null);
-      }
+    const [executionDate, setexecutionDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
+    const [reminders, setReminders] = useState([]);
+     // Структура данных для уведомления
+    const reminder = {
+        id: Date.now(), // Уникальный ID (можно использовать что-то более надежное)
+        dateTime: '2024-07-29T12:00', // Дата и время (ISO 8601)
+        text: 'Позвонить маме', // Текст напоминания
+        isCompleted: false, // Флаг, указывающий, выполнено ли напоминание
     };
+    useEffect(() => {
+        const setDate = (dateString, setter) => {
+            if (dateString) {
+                try {
+                    const parsedDate = parseISO(dateString);
+                    if (isValid(parsedDate)) {
+                        setter(parsedDate);
+                    } else {
+                        console.error("Невалидная дата:", dateString);
+                        setter(null);
+                    }
+                } catch (error) {
+                    console.error("Ошибка при преобразовании даты:", error);
+                    setter(null);
+                }
+            } else {
+                setter(null);
+            }
+        };
 
-    // Устанавливаем даты при загрузке формы
-    setDate(dueDate, setEndDate);
-    setDate(dateTimeOfExecution, setexecutionDate);
-  }, [dueDate, dateTimeOfExecution]); // Зависимости от пропсов
-   
+        // Устанавливаем даты при загрузке формы
+        setDate(dueDate, setEndDate);
+        setDate(dateTimeOfExecution, setexecutionDate);
+    }, [dueDate, dateTimeOfExecution]); // Зависимости от пропсов
 
+      useEffect(() => {
+        // Запрашиваем разрешение при монтировании компонента
+        if (!("Notification" in window)) {
+            console.log("Этот браузер не поддерживает уведомления.");
+            return;
+        }
+        Notification.requestPermission().then(permission => {
+            setNotificationPermission(permission);
+        });
+    }, []);
     // Данные задачи при редактировании
     const [editTaskData, setEditTaskData] = useState({
         id: id,
@@ -80,7 +89,7 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
         updateTasksList();
     }
 
-     const handleExecutionDataChange = (date) => {
+    const handleExecutionDataChange = (date) => {
         setexecutionDate(date);
         setEndDateError(date ? '' : 'Дата обязательна для заполнения.')
         // toast({ title: "Изменяем дату" });
@@ -115,53 +124,92 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     // Функции для открытия закрытия модального окна установки напоминаний
     const handleOpenNotificationModal = () => {
         setIsNotificationModalOpen(true);
-        
+
     };
 
     const handleCloseNotificationModal = () => {
         setIsNotificationModalOpen(false);
     };
 
-
-    const handleSaveNotificationInModal = () => { 
+    
+    const handleSaveNotificationInModal = () => {
         setIsNotificationModalOpen(false);
+         
+        // Получаем дату из формы
         const taskDueDate = new Date(editTaskData.dueDate);
+         const now = new Date(); // Определяем текущее время здесь
+         const tenSecondsBeforeNow = new Date(now.getTime() - 10000); // 10 секунд в миллисекундах
+        // Для каждого выбранного времени напоминания
         selectedReminders.forEach(reminderValue => {
+            // Вычитаем минуты
             const reminderTime = subtractMinutes(taskDueDate, reminderValue);
-            
-            const notification = {
+
+            if (reminderTime >= tenSecondsBeforeNow) {
+                showNotification(
+                    "Напоминание о задаче!",
+                    `Задача "${editTaskData.title}" должна быть выполнена.`
+                );
+            }
+        //     if (reminderTime < now) {
+        // showNotification(
+        //   "Напоминание о задаче!",
+        //   `Задача "${editTaskData.title}" должна быть выполнена.`
+        // );
+        // }else{
+        //     console.log("Уведмление еще не должно отработать");
+        // }
+            // Создаем объект напоминания
+            const newReminder = {
                 id: Date.now(),
-                taskId: editTaskData.id,
-                time: reminderTime.toISOString(),
-                title: "Напоминание о задаче!",
-                body: `Задача "${editTaskData.title}" должна быть выполнена.`,
+                dateTime: reminderTime.toISOString(),
+                text: `Напоминание о задаче "${editTaskData.title}"`,
+                isCompleted: false,
             };
-            
-            setScheduledNotifications(prevNotifications => [...prevNotifications, notification]);
-        })
-        console.log(reminderTime);
+
+            // Добавляем напоминание
+            addReminder(newReminder);
+        });
     };
 
+        //Добавить напоминание в список
+        // const addReminder = (dateTime, text) => {
+        //     const newReminder = {
+        //         id: Date.now(),
+        //         dateTime: dateTime,
+        //         text: text,
+        //         isCompleted: false,
+        //     };
+        //     toast({title: "reminder"});
+        //     console.log(reminders);
+        //     setReminders([...reminders, newReminder]);
+        //     console.log(reminders);
+        // };
+    //Измененная функция добавления напоминания
+    const addReminder = (reminder) => {
+        setReminders([...reminders, reminder]);
+        toast({ title: "Напоминание добавлено!" }); //Добавлено
+    };
+    const showNotification = useCallback((title, body) => {
+        if (notificationPermission === "granted") {
+            const notification = new Notification(title, {
+                body: body,
+                icon: "/logo192.png",
+            });
 
-
-     const showNotification = useCallback((title, body) => {
-    if (notificationPermission === "granted") {
-      const notification = new Notification(title, {
-        body: body,
-        icon: "/logo192.png",
-      });
-
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
-      };
-    } else if (notificationPermission === "denied") {
-      alert("Вы запретили показ уведомлений. Разрешите их в настройках браузера.");
-    }
-  }, [notificationPermission]);
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+        } else if (notificationPermission === "denied") {
+            alert("Вы запретили показ уведомлений. Разрешите их в настройках браузера.");
+        }
+    }, [notificationPermission]);
 
     const [scheduledNotifications, setScheduledNotifications] = useState([]);
+
     useEffect(() => {
+        if (scheduledNotifications.length === 0) return; 
+
         scheduledNotifications.forEach(notification => {
             const timeDiff = new Date(notification.time).getTime() - new Date().getTime();
 
@@ -195,21 +243,21 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     // Функция отправляющая запрос на изменение задачи на сервер с входными параметрами
     const handleEndEditTask = async (event) => {
         event.preventDefault();
-         console.log(id + "Task ID");
-        if(editTaskData.title === null || editTaskData.title === undefined || editTaskData.title.trim() === ""){
-            toast({title: 'Нельзя ввести пустой заголовок.'});
+        console.log(id + "Task ID");
+        if (editTaskData.title === null || editTaskData.title === undefined || editTaskData.title.trim() === "") {
+            toast({ title: 'Нельзя ввести пустой заголовок.' });
             return;
         }
 
-        if (!isValid(endDate)){
-                toast({title: 'Конечный срок имел некорректный формат', isClosable: 'true'});
-                return;
-            }
-        else if (!isValid(executionDate)){
-                toast({title: 'Дата выполнения имела некорректный формат', isClosable: 'true'});
-                return;
-            }
-        
+        if (!isValid(endDate)) {
+            toast({ title: 'Конечный срок имел некорректный формат', isClosable: 'true' });
+            return;
+        }
+        else if (!isValid(executionDate)) {
+            toast({ title: 'Дата выполнения имела некорректный формат', isClosable: 'true' });
+            return;
+        }
+
         const dueDateToAdd = endDate.toISOString();
         const executionDateToAdd = executionDate.toISOString();
 
@@ -226,16 +274,16 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
             console.log("Перед отправкой");
             console.log("Заголовки:", { 'Content-Type': 'application/json' });
             console.log("Тело запроса:", JSON.stringify(dataToSend));
-            
+
             const response = await fetch(`https://localhost:7148/api/Tasks/editTask?id=${id}`, {
                 method: 'PUT',
-                headers:{
+                headers: {
                     'Content-Type': 'application/json' // Указываем тип контента
                 },
                 body: JSON.stringify(dataToSend)
             });
             console.log("url " + response.url);
-           
+
 
             if (response.ok) {
                 console.log("Задача успешно обновлена.");
@@ -340,32 +388,93 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     };
 
 
-   const [selectedReminders, setSelectedReminders] = useState([]);
+    const [selectedReminders, setSelectedReminders] = useState([]);
 
-  const handleReminderChange = (values) => {
-    console.log(selectedReminders);
-    setSelectedReminders(values);
-    console.log('Выбраны значения:', values);
-  };
- 
+    const handleReminderChange = (values) => {
+        console.log(selectedReminders);
+        setSelectedReminders(values);
+        console.log('Выбраны значения:', values);
+    };
 
-  const handleDateChange = (date) => {
-    setStartDate(date);
-  };
 
-  const handleCalendarOpen = () => {
-    setIsCalendarOpen(true);
-  };
+    const handleDateChange = (date) => {
+        setStartDate(date);
+    };
 
-  const handleCalendarClose = () => {
-    setIsCalendarOpen(false);
-  };
+    const handleCalendarOpen = () => {
+        setIsCalendarOpen(true);
+    };
 
-  const subtractMinutes = (date, minutesToSubtract) => {
-    const newDate = new Date(date); // Создаем копию объекта Date
-    newDate.setMinutes(newDate.getMinutes() - minutesToSubtract);
-    return newDate;
-  };
+    const handleCalendarClose = () => {
+        setIsCalendarOpen(false);
+    };
+
+    const subtractMinutes = (date, minutesToSubtract) => {
+        const newDate = new Date(date);
+        newDate.setMinutes(newDate.getMinutes() - minutesToSubtract);
+        return newDate;
+    };
+    //  const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
+     //Спрашиваем разрешение на показ уведомления
+  
+   
+    //  const handleAddReminder = () => {
+    //     addReminder(newReminderDateTime, newReminderText);
+    //     setNewReminderDateTime('');
+    //     setNewReminderText('');
+    // };
+
+    //  //Показать уведомление
+    // const showNotification = (title, body) => {
+    //     console.log("Должен отправить уведомление");
+    //     if (notificationPermission === "granted") {
+    //         // const notification = new Notification("Porkchop is calling!!!", {
+    //         //     body: "Это тестовое уведомление из твоего React-приложения!",
+    //         //     icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDmeVh6ykOmAsC5M-MVRKtCnEJq3UUXQPEcg&s", // Замени на путь к своей иконке (необязательно)
+    //         // });
+    //          const notification = new Notification(title, {
+    //             body: body,
+    //             icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDmeVh6ykOmAsC5M-MVRKtCnEJq3UUXQPEcg&s", // Замени на путь к своей иконке (необязательно)
+    //         });
+
+    //         notification.onclick = () => {
+    //             window.focus();
+    //             notification.close();
+    //         };
+    //     } else if (notificationPermission === "denied") {
+    //         alert("Вы запретили показ уведомлений. Разрешите их в настройках браузера.");
+    //     } else {
+    //         console.log("Ожидание разрешения на показ уведомлений...");
+    //     }
+    // };
+
+     //Планирование уведомлений
+        useEffect(() => {
+            reminders.forEach(reminder => {
+                if (!reminder.isCompleted) {
+                    const timeDiff = new Date(reminder.dateTime).getTime() - new Date().getTime();
+    
+                    if (timeDiff > 0) {
+                        setTimeout(() => {
+                            showNotification(reminder.dateTime, reminder.text);
+                            // Помечаем напоминание как выполненное
+                            setReminders(prevReminders =>
+                                prevReminders.map(r =>
+                                    r.id === reminder.id ? { ...r, isCompleted: true } : r
+                                )
+                            );
+                        }, timeDiff);
+                    } else {
+                        // Если время уже прошло, помечаем напоминание как выполненное
+                        setReminders(prevReminders =>
+                            prevReminders.map(r =>
+                                r.id === reminder.id ? { ...r, isCompleted: true } : r
+                            )
+                        );
+                    }
+                }
+            });
+        }, [reminders, showNotification]); // Важно: добавь showNotification в зависимости
     return (
         // Карточка со всей информацией о заметке
         <Card style={cardStyle} marginTop={5}>
@@ -541,9 +650,34 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                             <Text fontSize={21}>Напомнить:</Text>
                             <ReminderSelect onChange={handleReminderChange} value={selectedReminders}></ReminderSelect>
                         </FormLabel>
+                        <div>
+            {/* Тестовая часть формы */}
+            {/* <h2>Добавить напоминание</h2>
+            <input
+                type="datetime-local"
+                value={newReminderDateTime}
+                onChange={(e) => setNewReminderDateTime(e.target.value)}
+            />
+            <input
+                type="text"
+                value={newReminderText}
+                onChange={(e) => setNewReminderText(e.target.value)}
+            />
+            <Button onClick={handleAddReminder}>Добавить</Button> */}
+             {/*Отображаем напоминания*/}
+            <div>
+                <Text>Все напоминания</Text>
+              {reminders.map((reminder) => (
+                <div key={reminder.id}>
+                  <Text>Дата: {formatDate(reminder.dateTime)}</Text>
+                  <Text>Текст: {reminder.text}</Text>
+                </div>
+              ))}
+            </div>
+             {/* Тестовая часть формы */}
+            </div>
                     </ModalBody>
                     <ModalFooter>
-                        
                         <Button colorScheme="blue" mr={3} onClick={handleSaveNotificationInModal}>
                             Сохранить
                         </Button>
