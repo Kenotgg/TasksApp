@@ -32,9 +32,9 @@ namespace TasksApp.Server.Controllers
         }
         //Изменить состояние выполнения задачи
         [HttpPut("EditTaskCompletion")]
-        public async Task<IActionResult> ChangeCompletionState(int id, bool isCompleted) 
+        public async Task<IActionResult> ChangeCompletionState(int id, bool isCompleted, DateTime dateTimeOfExecution) 
         {
-            var changedTask = await _tasksService.ChangeCompletionState(id, isCompleted);  
+            var changedTask = await _tasksService.ChangeCompletionState(id, isCompleted, dateTimeOfExecution);  
             return Ok(changedTask);
         }
         //Удалить задачу

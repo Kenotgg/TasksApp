@@ -27,12 +27,13 @@ namespace TasksApp.Server.Services
             return taskModel;
         }
         //Логика изменения состояния выполнения
-        public async Task<TaskModel> ChangeCompletionState(int id, bool isCompleted)
+        public async Task<TaskModel> ChangeCompletionState(int id, bool isCompleted, DateTime dateTimeOfExecution)
         {
             var taskToChange = await _dataContext.taskModels.FirstOrDefaultAsync(i => i.Id == id);
             if (taskToChange != null)
             {
                 taskToChange.IsCompleted = isCompleted;
+                taskToChange.DateTimeOfExecution = dateTimeOfExecution;
                 await _dataContext.SaveChangesAsync();
                 return taskToChange;
             }

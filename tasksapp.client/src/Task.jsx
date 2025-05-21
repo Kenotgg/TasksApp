@@ -1,8 +1,8 @@
 // Импорт различных библиотек для работы
-import { useToast, Card, Select, AlertDialog, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Input, ModalFooter, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button, CardFooter, Spacer, Stack, CardHeader, Divider, CardBody, Text, AbsoluteCenter, Box, Checkbox, textDecoration, IconButton, Flex, border } from '@chakra-ui/react';
+import { useToast, Card, Select, AlertDialog, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, FormControl, FormLabel, Input, ModalFooter, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button, CardFooter, Spacer, Stack, CardHeader, Divider, CardBody, Text, AbsoluteCenter, Box, Checkbox, textDecoration, IconButton, Flex, border, useStatStyles } from '@chakra-ui/react';
 import { format, isValid, parseISO } from 'date-fns';
 import { useState, useEffect, useCallback } from 'react';
-import { DeleteIcon, EditIcon, BellIcon, CalendarIcon } from '@chakra-ui/icons';
+import { DeleteIcon, EditIcon, BellIcon, CalendarIcon, useColorModeValue } from '@chakra-ui/icons';
 import React, { useRef } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -28,7 +28,8 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     const [executionDate, setexecutionDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [reminders, setReminders] = useState([]);
-     // Структура данных для уведомления
+    const [newDateTimeOfExecution, setNewDateTimeOfExecution] = useState(dateTimeOfExecution);
+    // Структура данных для уведомления
     const reminder = {
         id: Date.now(), // Уникальный ID (можно использовать что-то более надежное)
         dateTime: '2024-07-29T12:00', // Дата и время (ISO 8601)
@@ -60,7 +61,7 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
         setDate(dateTimeOfExecution, setexecutionDate);
     }, [dueDate, dateTimeOfExecution]); // Зависимости от пропсов
 
-      useEffect(() => {
+    useEffect(() => {
         // Запрашиваем разрешение при монтировании компонента
         if (!("Notification" in window)) {
             console.log("Этот браузер не поддерживает уведомления.");
@@ -131,59 +132,35 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
         setIsNotificationModalOpen(false);
     };
 
-    
+    const [selectedDateTime, setSelectedDateTime] = useState(new Date());
     const handleSaveNotificationInModal = () => {
         setIsNotificationModalOpen(false);
-         
-        // Получаем дату из формы
-        const taskDueDate = new Date(editTaskData.dueDate);
-         const now = new Date(); // Определяем текущее время здесь
-         const tenSecondsBeforeNow = new Date(now.getTime() - 10000); // 10 секунд в миллисекундах
-        // Для каждого выбранного времени напоминания
-        selectedReminders.forEach(reminderValue => {
-            // Вычитаем минуты
-            const reminderTime = subtractMinutes(taskDueDate, reminderValue);
-
-            if (reminderTime >= tenSecondsBeforeNow) {
-                showNotification(
-                    "Напоминание о задаче!",
-                    `Задача "${editTaskData.title}" должна быть выполнена.`
-                );
-            }
-        //     if (reminderTime < now) {
-        // showNotification(
-        //   "Напоминание о задаче!",
-        //   `Задача "${editTaskData.title}" должна быть выполнена.`
-        // );
-        // }else{
-        //     console.log("Уведмление еще не должно отработать");
-        // }
-            // Создаем объект напоминания
-            const newReminder = {
-                id: Date.now(),
-                dateTime: reminderTime.toISOString(),
-                text: `Напоминание о задаче "${editTaskData.title}"`,
-                isCompleted: false,
-            };
-
-            // Добавляем напоминание
-            addReminder(newReminder);
-        });
+        showNotification(
+            "Напоминание о задаче!",
+            `Задача "${editTaskData.title}" должна быть выполнена.`
+        );
     };
 
-        //Добавить напоминание в список
-        // const addReminder = (dateTime, text) => {
-        //     const newReminder = {
-        //         id: Date.now(),
-        //         dateTime: dateTime,
-        //         text: text,
-        //         isCompleted: false,
-        //     };
-        //     toast({title: "reminder"});
-        //     console.log(reminders);
-        //     setReminders([...reminders, newReminder]);
-        //     console.log(reminders);
-        // };
+
+    const scheduleNotification = (dateTime, taskTitle) => {
+        const now = new Date().getTime();
+        const notificationTime = new Date(dateTime).getTime();
+        const timeDiff = notificationTime - now - 15000; // 15 секунд до наступления времени
+
+        if (timeDiff > 0) {
+            setTimeout(() => {
+                showNotification(
+                    "Напоминание о задаче!",
+                    `Задача "${taskTitle}" должна быть выполнена.`
+                );
+            }, timeDiff);
+            console.log(`Уведомление запланировано на ${new Date(notificationTime - 15000)}`);
+        } else {
+            console.log(" Невозможно запланировать уведомление: время уже прошло или слишком близко к текущему.");
+            showNotification(" Невозможно запланировать уведомление: время уже прошло или слишком близко к текущему.");
+        }
+    };
+
     //Измененная функция добавления напоминания
     const addReminder = (reminder) => {
         setReminders([...reminders, reminder]);
@@ -208,7 +185,7 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     const [scheduledNotifications, setScheduledNotifications] = useState([]);
 
     useEffect(() => {
-        if (scheduledNotifications.length === 0) return; 
+        if (scheduledNotifications.length === 0) return;
 
         scheduledNotifications.forEach(notification => {
             const timeDiff = new Date(notification.time).getTime() - new Date().getTime();
@@ -319,12 +296,28 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
         }
     };
 
+
+    // useEffect для установки executionDate при загрузке компонента
+    useEffect(() => {
+        if (dateTimeOfExecution) {
+            setNewDateTimeOfExecution(new Date(dateTimeOfExecution)); // Преобразуем строку в Date
+        }
+    }, [dateTimeOfExecution]);
+
     // Функция отправляющая запрос на смену состояния выполнения задачи
     const handleCheckBoxChange = async (event) => {
         const newIsCompleted = event.target.checked;
         setIsCompleted(newIsCompleted);
+        let date = new Date();
+        let dateToSend = date.toISOString();
+        if (!newIsCompleted) {
+            // Если задача снимается с выполнения
+            date = new Date(0); // 1 января 1970 года (timestamp 0)
+            console.log(date.toISOString() + " когда снял флаг");
+            dateToSend = date.toISOString(); // Преобразуем в ISO строку
+        }
         try {
-            const response = await fetch(`https://localhost:7148/api/Tasks/EditTaskCompletion?id=${id}&isCompleted=${newIsCompleted}`, {
+            const response = await fetch(`https://localhost:7148/api/Tasks/EditTaskCompletion?id=${id}&isCompleted=${newIsCompleted}&dateTimeOfExecution=${dateToSend}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -333,12 +326,28 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
             });
             if (response.ok) {
                 console.log("Статус успешно обновлен.");
-            }
 
+                setNewDateTimeOfExecution(date); // Обновляем состояние executionDate
+                console.log(newDateTimeOfExecution + " executionDate"); // Теперь выводим значение состояния!
+
+                console.log(editTaskData.dateTimeOfExecution + " до");
+                setEditTaskData(prevEditTaskData => ({
+                    ...prevEditTaskData,
+                    isCompleted: newIsCompleted,
+                    dateTimeOfExecution: newDateTimeOfExecution, // Используем значение состояния!
+                }));
+
+
+                updateTasksList();
+                console.log(editTaskData.dateTimeOfExecution + " после");
+            }
         } catch (error) {
             console.log(error);
         }
     }
+
+
+
 
     // Функции для открытия и закрытия диалога удаления
     const handleOpenDeleteDialog = (id) => {
@@ -415,9 +424,9 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
         return newDate;
     };
     //  const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
-     //Спрашиваем разрешение на показ уведомления
-  
-   
+    //Спрашиваем разрешение на показ уведомления
+
+
     //  const handleAddReminder = () => {
     //     addReminder(newReminderDateTime, newReminderText);
     //     setNewReminderDateTime('');
@@ -448,33 +457,35 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
     //     }
     // };
 
-     //Планирование уведомлений
-        useEffect(() => {
-            reminders.forEach(reminder => {
-                if (!reminder.isCompleted) {
-                    const timeDiff = new Date(reminder.dateTime).getTime() - new Date().getTime();
-    
-                    if (timeDiff > 0) {
-                        setTimeout(() => {
-                            showNotification(reminder.dateTime, reminder.text);
-                            // Помечаем напоминание как выполненное
-                            setReminders(prevReminders =>
-                                prevReminders.map(r =>
-                                    r.id === reminder.id ? { ...r, isCompleted: true } : r
-                                )
-                            );
-                        }, timeDiff);
-                    } else {
-                        // Если время уже прошло, помечаем напоминание как выполненное
+    //Планирование уведомлений
+    useEffect(() => {
+        reminders.forEach(reminder => {
+            if (!reminder.isCompleted) {
+                const timeDiff = new Date(reminder.dateTime).getTime() - new Date().getTime();
+
+                if (timeDiff > 0) {
+                    setTimeout(() => {
+                        showNotification(reminder.dateTime, reminder.text);
+                        // Помечаем напоминание как выполненное
                         setReminders(prevReminders =>
                             prevReminders.map(r =>
                                 r.id === reminder.id ? { ...r, isCompleted: true } : r
                             )
                         );
-                    }
+                    }, timeDiff);
+                } else {
+                    // Если время уже прошло, помечаем напоминание как выполненное
+                    setReminders(prevReminders =>
+                        prevReminders.map(r =>
+                            r.id === reminder.id ? { ...r, isCompleted: true } : r
+                        )
+                    );
                 }
-            });
-        }, [reminders, showNotification]); // Важно: добавь showNotification в зависимости
+            }
+        });
+    }, [reminders, showNotification]); // Важно: добавь showNotification в зависимости
+    const buttonBgColor = useColorModeValue("gray.100", "#1a202c");
+    const deleteButtonBgColor = useColorModeValue("gray.200", "red.500");
     return (
         // Карточка со всей информацией о заметке
         <Card style={cardStyle} marginTop={5}>
@@ -485,7 +496,8 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                     <IconButton marginRight={1} aria-label="Установить напоминание"
                         onClick={handleOpenNotificationModal}
                         icon={<BellIcon />}
-                        size="sm">
+                        size="sm"
+                        background={buttonBgColor}>
                     </IconButton>
                 </Stack>
 
@@ -509,7 +521,8 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                         <IconButton marginRight={1} aria-label="Редактировать задачу"
                             onClick={handleOpenEditModal}
                             icon={<EditIcon />}
-                            size="sm">
+                            size="sm"
+                            background={buttonBgColor}>
                         </IconButton>
 
                     </Flex>
@@ -554,7 +567,8 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                             <IconButton aria-label="Удалить задачу"
                                 onClick={() => handleOpenDeleteDialog(id)}
                                 icon={<DeleteIcon />}
-                                size="sm">
+                                size="sm"
+                                background={deleteButtonBgColor}>
                             </IconButton>
                         </Stack>
                     </ModalHeader>
@@ -614,14 +628,17 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                                 </DatePicker>
                             </Box>
                         </FormControl>
-                        <FormControl mt={4}>
+                        {isCompleted && (
+                            <FormControl mt={4}>
+                                <FormLabel fontSize={21}>Выполненно:</FormLabel>
+                                <Box border={"2px solid black"} borderColor={'gray.200'} borderRadius={"md"} marginBottom={"14px"} fontSize={21}>
+                                    <DatePicker fontSize={21} className='font-semibold' selected={executionDate} onChange={handleExecutionDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
+                                    </DatePicker>
+                                </Box>
+                            </FormControl>
+                        )}
 
-                            <FormLabel fontSize={21}>Выполненно:</FormLabel>
-                            <Box border={"2px solid black"} borderColor={'gray.200'} borderRadius={"md"} marginBottom={"14px"} fontSize={21}>
-                                <DatePicker fontSize={21} className='font-semibold' selected={executionDate} onChange={handleExecutionDataChange} showTimeSelect dateFormat="dd.MM.yyyy HH:mm" timeFormat='HH:mm' timeCaption='Время'>
-                                </DatePicker>
-                            </Box>
-                        </FormControl>
+
                     </ModalBody>
                     <ModalFooter>
                         <Button colorScheme="blue" mr={3} onClick={handleEndEditTask}>
@@ -651,8 +668,8 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                             <ReminderSelect onChange={handleReminderChange} value={selectedReminders}></ReminderSelect>
                         </FormLabel>
                         <div>
-            {/* Тестовая часть формы */}
-            {/* <h2>Добавить напоминание</h2>
+                            {/* Тестовая часть формы */}
+                            {/* <h2>Добавить напоминание</h2>
             <input
                 type="datetime-local"
                 value={newReminderDateTime}
@@ -664,18 +681,18 @@ export default function Task({ title, description, priority, dueDate, dateTimeOf
                 onChange={(e) => setNewReminderText(e.target.value)}
             />
             <Button onClick={handleAddReminder}>Добавить</Button> */}
-             {/*Отображаем напоминания*/}
-            <div>
-                <Text>Все напоминания</Text>
-              {reminders.map((reminder) => (
-                <div key={reminder.id}>
-                  <Text>Дата: {formatDate(reminder.dateTime)}</Text>
-                  <Text>Текст: {reminder.text}</Text>
-                </div>
-              ))}
-            </div>
-             {/* Тестовая часть формы */}
-            </div>
+                            {/*Отображаем напоминания*/}
+                            <div>
+                                <Text>Все напоминания</Text>
+                                {reminders.map((reminder) => (
+                                    <div key={reminder.id}>
+                                        <Text>Дата: {formatDate(reminder.dateTime)}</Text>
+                                        <Text>Текст: {reminder.text}</Text>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Тестовая часть формы */}
+                        </div>
                     </ModalBody>
                     <ModalFooter>
                         <Button colorScheme="blue" mr={3} onClick={handleSaveNotificationInModal}>
